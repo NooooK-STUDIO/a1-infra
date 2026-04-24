@@ -1,6 +1,6 @@
-# ReadingGarden Infrastructure
+# A1 Infrastructure
 
-Infrastructure and deployment assets for ReadingGarden services on OCI A1.
+Infrastructure and deployment assets for services running on OCI A1.
 
 ## Contents
 
