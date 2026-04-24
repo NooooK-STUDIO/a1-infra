@@ -169,7 +169,7 @@ jobs:
             local stage_dir="/tmp/a1-infra-monitoring-${GITHUB_RUN_ID}"
 
             upload_dir deploy/monitoring "$stage_dir"
-            remote_exec "sudo mkdir -p /opt/infra/monitoring && sudo cp -a '$stage_dir'/. /opt/infra/monitoring/ && sudo mv /opt/infra/monitoring/docker-compose.monitoring.yml /opt/infra/monitoring/docker-compose.yml && sudo chmod +x /opt/infra/monitoring/scripts/*.sh && sudo /opt/infra/monitoring/scripts/bootstrap-monitoring.sh && sudo /opt/infra/monitoring/scripts/verify-monitoring.sh"
+            remote_exec "sudo mkdir -p /opt/infra/monitoring && sudo rm -rf /opt/infra/monitoring/blackbox /opt/infra/monitoring/grafana /opt/infra/monitoring/prometheus /opt/infra/monitoring/scripts && sudo rm -f /opt/infra/monitoring/SECURITY.md /opt/infra/monitoring/RUNBOOK.md /opt/infra/monitoring/.env.example /opt/infra/monitoring/docker-compose.yml /opt/infra/monitoring/docker-compose.monitoring.yml && sudo cp -a '$stage_dir'/. /opt/infra/monitoring/ && sudo mv /opt/infra/monitoring/docker-compose.monitoring.yml /opt/infra/monitoring/docker-compose.yml && sudo chmod +x /opt/infra/monitoring/scripts/*.sh && sudo /opt/infra/monitoring/scripts/bootstrap-monitoring.sh && sudo /opt/infra/monitoring/scripts/verify-monitoring.sh"
           }
 
           apply_host_caddy() {
