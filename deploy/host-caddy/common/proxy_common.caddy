@@ -1,0 +1,12 @@
+(common_proxy) {
+    encode zstd gzip
+
+    log {
+        output stdout
+        format json
+    }
+
+    request_body {
+        max_size 10MB
+    }
+}

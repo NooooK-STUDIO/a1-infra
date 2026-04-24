@@ -1,0 +1,57 @@
+services:
+  app-blue:
+    image: ${IMAGE_REF:?IMAGE_REF is required}
+    container_name: ${APP_CONTAINER_PREFIX:?APP_CONTAINER_PREFIX is required}-blue
+    restart: unless-stopped
+    stop_grace_period: ${APP_STOP_GRACE_PERIOD:-35s}
+    pull_policy: always
+    ports:
+      - "127.0.0.1:${APP_BLUE_HOST_PORT:?APP_BLUE_HOST_PORT is required}:8080"
+      - "127.0.0.1:${APP_BLUE_MANAGEMENT_HOST_PORT:?APP_BLUE_MANAGEMENT_HOST_PORT is required}:8081"
+    env_file:
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.env
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
+    volumes:
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:/opt/reading-garden/data
+    networks:
+      - default
+      - shared-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app-green:
+    image: ${IMAGE_REF:?IMAGE_REF is required}
+    container_name: ${APP_CONTAINER_PREFIX:?APP_CONTAINER_PREFIX is required}-green
+    restart: unless-stopped
+    stop_grace_period: ${APP_STOP_GRACE_PERIOD:-35s}
+    pull_policy: always
+    ports:
+      - "127.0.0.1:${APP_GREEN_HOST_PORT:?APP_GREEN_HOST_PORT is required}:8080"
+      - "127.0.0.1:${APP_GREEN_MANAGEMENT_HOST_PORT:?APP_GREEN_MANAGEMENT_HOST_PORT is required}:8081"
+    env_file:
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.env
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
+    volumes:
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:/opt/reading-garden/data
+    networks:
+      - default
+      - shared-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    profiles:
+      - green
+
+networks:
+  shared-backend:
+    name: ${SHARED_BACKEND_NETWORK_NAME:-reading-garden-shared-backend}
+    external: true

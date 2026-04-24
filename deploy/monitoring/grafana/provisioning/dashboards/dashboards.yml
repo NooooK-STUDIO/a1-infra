@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: ReadingGarden
+    orgId: 1
+    folder: ReadingGarden
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

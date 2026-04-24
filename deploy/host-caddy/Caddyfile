@@ -1,0 +1,13 @@
+{
+    admin unix//var/lib/caddy/caddy-admin.sock
+    metrics {
+        per_host
+    }
+}
+
+import /etc/caddy/common/*.caddy
+import /etc/caddy/sites/*.caddy
+
+http://127.0.0.1:2019 {
+    metrics /metrics
+}

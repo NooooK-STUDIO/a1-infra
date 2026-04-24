@@ -1,0 +1,16 @@
+.DS_Store
+
+# Runtime secrets and local environment files
+.env
+*.env
+!*.env.example
+secrets/
+*.pem
+*.key
+*.p12
+*.json.key
+
+# Local editor/tooling
+.idea/
+.vscode/
+

@@ -1,0 +1,4 @@
+readinggarden.duckdns.org {
+    import common_proxy
+    import /etc/caddy/upstreams/reading-garden-prod.caddy
+}
