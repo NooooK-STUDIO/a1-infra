@@ -8,7 +8,7 @@ Infrastructure and deployment assets for services running on OCI A1.
 - `deploy/blue-green-deploy.sh`: blue/green cutover script for host-managed Caddy.
 - `deploy/host-caddy/`: host `systemd` Caddy configuration templates.
 - `deploy/postgres/` and `deploy/docker-compose.postgres-shared.yml`: shared PostgreSQL bootstrap assets.
-- `deploy/monitoring/`: Prometheus, Grafana, Alertmanager, cAdvisor, node-exporter, and blackbox exporter assets.
+- `deploy/monitoring/`: Phase 1 monitoring assets for Prometheus, Grafana, cAdvisor, node-exporter, and blackbox exporter. Alertmanager is deferred.
 - `deploy/tests/`: shell tests for deployment configuration.
 
 ## Verification

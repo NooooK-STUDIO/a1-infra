@@ -37,6 +37,18 @@ groups:
           summary: Caddy metrics target is down
           runbook: Check host Caddy admin metrics on the local admin endpoint.
 
+      - alert: ContainerExporterDown
+        expr: up{job="cadvisor"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          env: infra
+          service: docker
+          component: container
+        annotations:
+          summary: cAdvisor container metrics target is down
+          runbook: Check the a1-monitoring-cadvisor container and localhost port 18082.
+
       - alert: HostDiskAlmostFull
         expr: node_filesystem_avail_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} < 0.15
         for: 10m
