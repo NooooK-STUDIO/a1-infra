@@ -1,0 +1,125 @@
+name: Infra CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate deploy assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install shell test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
+
+      - name: Run deploy shell tests
+        run: |
+          set -euo pipefail
+
+          for test_script in deploy/tests/*.sh; do
+            echo "::group::${test_script}"
+            bash "$test_script"
+            echo "::endgroup::"
+          done
+
+      - name: Check shell syntax
+        run: |
+          find deploy -name '*.sh' -print0 | xargs -0 -n1 bash -n
+
+      - name: Check Docker Compose configs
+        run: |
+          set -euo pipefail
+
+          app_host_dir="$(mktemp -d)"
+          trap 'rm -rf "$app_host_dir"' EXIT
+          mkdir -p "$app_host_dir/secrets" "$app_host_dir/data"
+          : > "$app_host_dir/.env"
+          : > "$app_host_dir/.runtime.env"
+
+          IMAGE_REF=example/reading-garden:test \
+          APP_CONTAINER_PREFIX=reading-garden-ci \
+          APP_BLUE_HOST_PORT=18080 \
+          APP_BLUE_MANAGEMENT_HOST_PORT=19080 \
+          APP_GREEN_HOST_PORT=18081 \
+          APP_GREEN_MANAGEMENT_HOST_PORT=19081 \
+          APP_HOST_DIR="$app_host_dir" \
+            docker compose -f deploy/docker-compose.oci.yml config >/dev/null
+
+          POSTGRES_SUPERUSER=postgres \
+          POSTGRES_SUPERUSER_PASSWORD=ci-secret \
+          READING_GARDEN_PROD_APP_PASSWORD=ci-secret \
+          READING_GARDEN_PROD_MIGRATOR_PASSWORD=ci-secret \
+          READING_GARDEN_DEV_APP_PASSWORD=ci-secret \
+          READING_GARDEN_DEV_MIGRATOR_PASSWORD=ci-secret \
+            docker compose -f deploy/docker-compose.postgres-shared.yml config >/dev/null
+
+          GRAFANA_ADMIN_PASSWORD=ci-secret \
+            docker compose -f deploy/monitoring/docker-compose.monitoring.yml config >/dev/null
+
+      - name: Check Prometheus config and rules
+        run: |
+          set -euo pipefail
+
+          docker run --rm \
+            --entrypoint promtool \
+            -v "$PWD/deploy/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.4.0 \
+            check config /etc/prometheus/prometheus.yml
+
+          docker run --rm \
+            --entrypoint sh \
+            -v "$PWD/deploy/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.4.0 \
+            -c 'promtool check rules /etc/prometheus/rules/*.yml'
+
+      - name: Check host Caddy config template
+        run: |
+          set -euo pipefail
+
+          caddy_dir="$(mktemp -d)"
+          trap 'rm -rf "$caddy_dir"' EXIT
+          cp -R deploy/host-caddy/. "$caddy_dir/"
+          mkdir -p "$caddy_dir/upstreams"
+          printf 'reverse_proxy 127.0.0.1:18080\n' > "$caddy_dir/upstreams/reading-garden-prod.caddy"
+          printf 'reverse_proxy 127.0.0.1:18090\n' > "$caddy_dir/upstreams/reading-garden-dev.caddy"
+
+          docker run --rm \
+            -v "$caddy_dir:/etc/caddy:ro" \
+            caddy:2.10.0 \
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+      - name: Note Alertmanager validation status
+        run: |
+          echo "Alertmanager config validation is skipped because deploy/monitoring does not contain Alertmanager config in this phase."
+
+      - name: Scan for committed secret-shaped values
+        run: |
+          set -euo pipefail
+
+          secret_pattern='-----BEGIN [A-Z ]*PRIVATE KEY-----|discord(?:app)?\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]+|AIza[0-9A-Za-z_-]{35}|gh[pousr]_[A-Za-z0-9_]{20,}|"type"[[:space:]]*:[[:space:]]*"service_account"'
+          set +e
+          rg -n --hidden --glob '!.git' --pcre2 -- "$secret_pattern" .
+          rg_status=$?
+          set -e
+
+          if [[ "$rg_status" -eq 0 ]]; then
+            echo "Secret-shaped value found in repository." >&2
+            exit 1
+          fi
+
+          if [[ "$rg_status" -gt 1 ]]; then
+            echo "Secret scan failed with rg exit code ${rg_status}." >&2
+            exit "$rg_status"
+          fi

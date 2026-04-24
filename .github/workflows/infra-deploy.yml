@@ -1,0 +1,213 @@
+name: Infra Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Infra target to deploy
+        required: true
+        type: choice
+        default: monitoring
+        options:
+          - monitoring
+          - host-caddy
+          - postgres
+          - all
+      mode:
+        description: Run mode
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+      confirm_apply:
+        description: Type APPLY to allow mode=apply
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: ${{ inputs.mode }} ${{ inputs.target }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Validate manual inputs
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ inputs.mode }}" == "apply" && "${{ inputs.confirm_apply }}" != "APPLY" ]]; then
+            echo "mode=apply requires confirm_apply=APPLY." >&2
+            exit 1
+          fi
+
+      - name: Dry-run deployment plan
+        if: ${{ inputs.mode == 'dry-run' }}
+        run: |
+          set -euo pipefail
+
+          target="${{ inputs.target }}"
+
+          print_monitoring() {
+            cat <<'PLAN'
+          [monitoring]
+          Source: deploy/monitoring/
+          Remote staging: /tmp/a1-infra-monitoring-${GITHUB_RUN_ID}
+          Destination: /opt/infra/monitoring
+          File mapping: docker-compose.monitoring.yml -> /opt/infra/monitoring/docker-compose.yml
+          Host-local file preserved: /opt/infra/monitoring/.env
+          Apply command: /opt/infra/monitoring/scripts/bootstrap-monitoring.sh
+          Verify command: /opt/infra/monitoring/scripts/verify-monitoring.sh
+          PLAN
+          }
+
+          print_host_caddy() {
+            cat <<'PLAN'
+          [host-caddy]
+          Source: deploy/host-caddy/
+          Remote staging: /tmp/reading-garden-host-caddy
+          Bootstrap script: deploy/bootstrap-host-caddy.sh -> /tmp/bootstrap-host-caddy.sh
+          Destination: /etc/caddy, /etc/systemd/system/caddy.service.d
+          Apply command: sudo HOST_CADDY_STAGE_DIR=/tmp/reading-garden-host-caddy bash /tmp/bootstrap-host-caddy.sh
+          Verify command: sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          Reload command: sudo systemctl reload caddy
+          PLAN
+          }
+
+          print_postgres() {
+            cat <<'PLAN'
+          [postgres]
+          Source: deploy/docker-compose.postgres-shared.yml, deploy/postgres/init/, deploy/bootstrap-shared-postgres.sh
+          Remote staging: /tmp/a1-infra-postgres-${GITHUB_RUN_ID}
+          Destination: /opt/infra/postgresql
+          File mapping: docker-compose.postgres-shared.yml -> /opt/infra/postgresql/docker-compose.yml
+          Host-local secrets preserved: /opt/infra/postgresql/secrets/*
+          Apply command: /opt/infra/postgresql/bootstrap-shared-postgres.sh
+          Verify command: docker compose -f /opt/infra/postgresql/docker-compose.yml ps
+          PLAN
+          }
+
+          case "$target" in
+            monitoring)
+              print_monitoring
+              ;;
+            host-caddy)
+              print_host_caddy
+              ;;
+            postgres)
+              print_postgres
+              ;;
+            all)
+              print_postgres
+              print_host_caddy
+              print_monitoring
+              ;;
+            *)
+              echo "Unsupported target: $target" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Configure SSH
+        if: ${{ inputs.mode == 'apply' }}
+        env:
+          OCI_HOST: ${{ secrets.OCI_HOST }}
+          OCI_PORT: ${{ secrets.OCI_PORT }}
+          OCI_SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+        run: |
+          set -euo pipefail
+
+          : "${OCI_HOST:?OCI_HOST secret is required}"
+          : "${OCI_SSH_PRIVATE_KEY:?OCI_SSH_PRIVATE_KEY secret is required}"
+          : "${OCI_USER:?OCI_USER secret is required}"
+
+          port="${OCI_PORT:-22}"
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_PRIVATE_KEY" > "$HOME/.ssh/oci_key"
+          chmod 600 "$HOME/.ssh/oci_key"
+          ssh-keyscan -p "$port" "$OCI_HOST" >> "$HOME/.ssh/known_hosts"
+
+      - name: Apply selected target
+        if: ${{ inputs.mode == 'apply' }}
+        env:
+          OCI_HOST: ${{ secrets.OCI_HOST }}
+          OCI_PORT: ${{ secrets.OCI_PORT }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+        run: |
+          set -euo pipefail
+
+          port="${OCI_PORT:-22}"
+          remote="${OCI_USER}@${OCI_HOST}"
+          ssh_opts=(-i "$HOME/.ssh/oci_key" -p "$port" -o StrictHostKeyChecking=yes)
+          target="${{ inputs.target }}"
+
+          # shellcheck disable=SC2029
+          remote_exec() {
+            ssh "${ssh_opts[@]}" "$remote" "$@"
+          }
+
+          # shellcheck disable=SC2029
+          upload_dir() {
+            local source_dir="$1"
+            local remote_dir="$2"
+
+            tar -C "$source_dir" -czf - . |
+              ssh "${ssh_opts[@]}" "$remote" "rm -rf '$remote_dir' && mkdir -p '$remote_dir' && tar -C '$remote_dir' -xzf -"
+          }
+
+          apply_monitoring() {
+            local stage_dir="/tmp/a1-infra-monitoring-${GITHUB_RUN_ID}"
+
+            upload_dir deploy/monitoring "$stage_dir"
+            remote_exec "sudo mkdir -p /opt/infra/monitoring && sudo cp -a '$stage_dir'/. /opt/infra/monitoring/ && sudo mv /opt/infra/monitoring/docker-compose.monitoring.yml /opt/infra/monitoring/docker-compose.yml && sudo chmod +x /opt/infra/monitoring/scripts/*.sh && sudo /opt/infra/monitoring/scripts/bootstrap-monitoring.sh && sudo /opt/infra/monitoring/scripts/verify-monitoring.sh"
+          }
+
+          apply_host_caddy() {
+            upload_dir deploy/host-caddy /tmp/reading-garden-host-caddy
+            scp -i "$HOME/.ssh/oci_key" -P "$port" -o StrictHostKeyChecking=yes deploy/bootstrap-host-caddy.sh "$remote:/tmp/bootstrap-host-caddy.sh"
+            remote_exec "chmod +x /tmp/bootstrap-host-caddy.sh && sudo HOST_CADDY_STAGE_DIR=/tmp/reading-garden-host-caddy bash /tmp/bootstrap-host-caddy.sh && sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && sudo systemctl reload caddy"
+          }
+
+          apply_postgres() {
+            local stage_dir="/tmp/a1-infra-postgres-${GITHUB_RUN_ID}"
+
+            rm -rf .postgres-deploy
+            mkdir -p .postgres-deploy/postgres
+            cp deploy/docker-compose.postgres-shared.yml .postgres-deploy/docker-compose.postgres-shared.yml
+            cp deploy/bootstrap-shared-postgres.sh .postgres-deploy/bootstrap-shared-postgres.sh
+            cp -R deploy/postgres/init .postgres-deploy/postgres/init
+
+            upload_dir .postgres-deploy "$stage_dir"
+            remote_exec "sudo mkdir -p /opt/infra/postgresql && sudo cp '$stage_dir/docker-compose.postgres-shared.yml' /opt/infra/postgresql/docker-compose.yml && sudo rm -rf /opt/infra/postgresql/init && sudo cp -a '$stage_dir/postgres/init' /opt/infra/postgresql/init && sudo cp '$stage_dir/bootstrap-shared-postgres.sh' /opt/infra/postgresql/bootstrap-shared-postgres.sh && sudo chmod +x /opt/infra/postgresql/bootstrap-shared-postgres.sh && sudo /opt/infra/postgresql/bootstrap-shared-postgres.sh && docker compose -f /opt/infra/postgresql/docker-compose.yml ps"
+          }
+
+          case "$target" in
+            monitoring)
+              apply_monitoring
+              ;;
+            host-caddy)
+              apply_host_caddy
+              ;;
+            postgres)
+              apply_postgres
+              ;;
+            all)
+              apply_postgres
+              apply_host_caddy
+              apply_monitoring
+              ;;
+            *)
+              echo "Unsupported target: $target" >&2
+              exit 1
+              ;;
+          esac
