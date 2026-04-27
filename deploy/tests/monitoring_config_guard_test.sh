@@ -64,7 +64,7 @@ if rg -n 'Prod[A-Za-z]+Down|env: prod|reading-garden-prod-app' deploy/monitoring
     echo "prod alerting is phase-later, not phase 1" >&2
     exit 1
 fi
-grep -Fq 'docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d' deploy/monitoring/scripts/bootstrap-monitoring.sh
+grep -Fq 'docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate' deploy/monitoring/scripts/bootstrap-monitoring.sh
 grep -Fq '/api/datasources/uid/prometheus/health' deploy/monitoring/scripts/verify-monitoring.sh
 if rg -n 'reading-garden-prod-app|PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "phase 1 verification must not require prod app metrics or prod live docs" >&2

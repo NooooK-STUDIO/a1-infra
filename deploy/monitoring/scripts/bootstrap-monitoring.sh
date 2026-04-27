@@ -22,5 +22,5 @@ for key in "${required_keys[@]}"; do
 done
 
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" config >/dev/null
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps
