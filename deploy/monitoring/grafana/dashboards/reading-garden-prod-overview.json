@@ -825,7 +825,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "expr": "sum(count_over_time({container=~\"reading-garden-prod-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\" !~ \"(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)\" [30m]))",
+          "expr": "sum(count_over_time({container=~\"reading-garden-prod-.*\"} |~ \"(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\" !~ \"(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)\" [30m]))",
           "refId": "A",
           "legendFormat": "error logs"
         }
