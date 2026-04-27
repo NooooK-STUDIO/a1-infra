@@ -86,6 +86,9 @@ These panels use the same filter as the Discord log alerts, so they are the
 first place to check when `GrafanaProdAppErrorLogsDetected` or
 `GrafanaDevAppErrorLogsDetected` fires. The Discord payload includes a
 `logs_dashboard` annotation that opens this dashboard for the last 30 minutes.
+The filter excludes expected stale FCM token cleanup logs with `UNREGISTERED`
+or `messaging/registration-token-not-registered`; other FCM failures remain
+visible.
 
 Useful Loki queries:
 
@@ -93,8 +96,8 @@ Useful Loki queries:
 {source="docker"}
 {container=~"reading-garden-prod-.*"}
 {container=~"reading-garden-dev-.*"}
-{container=~"reading-garden-prod-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)"
-{container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)"
+{container=~"reading-garden-prod-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"
+{container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"
 {container="reading-garden-prod-blue"}
 {container="reading-garden-prod-green"}
 {unit="caddy.service"}

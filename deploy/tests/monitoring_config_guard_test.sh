@@ -192,6 +192,7 @@ grep -Fq '{container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|tr
 grep -Fq 'logs_dashboard: https://nooook-monitoring.duckdns.org/d/reading-garden-logs?orgId=1&from=now-30m&to=now' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'logs_query: '\''{container=~"reading-garden-prod-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)"' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'logs_query: '\''{container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)"' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'signal: logs' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -A55 'uid: grafana-dev-app-error-logs' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml | grep -Fq 'for: 2m'
 grep -A55 'uid: grafana-prod-app-error-logs' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml | grep -Fq 'for: 1m'
@@ -255,6 +256,7 @@ grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-g
 grep -Fq 'Dev Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '|~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\"' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '!~ \"(?i)(no error|error page|error dispatch)\"' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq 'FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq 'Caddy Systemd Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod Caddy Access Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Dev Caddy Access Logs' deploy/monitoring/scripts/verify-monitoring.sh
@@ -287,6 +289,7 @@ grep -Fq '{container=~"reading-garden-prod-.*"}' deploy/monitoring/RUNBOOK.md
 grep -Fq 'Prod Recent Error Logs' deploy/monitoring/RUNBOOK.md
 grep -Fq 'Dev Recent Error Logs' deploy/monitoring/RUNBOOK.md
 grep -Fq 'logs_dashboard' deploy/monitoring/RUNBOOK.md
+grep -Fq 'stale FCM token cleanup logs' deploy/monitoring/RUNBOOK.md
 grep -Fq './scripts/backup-grafana-state.sh' deploy/monitoring/RUNBOOK.md
 grep -Fq '/opt/infra/monitoring/backups' deploy/monitoring/RUNBOOK.md
 grep -Fq 'self-log loops' deploy/monitoring/RUNBOOK.md

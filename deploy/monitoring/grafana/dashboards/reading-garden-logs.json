@@ -48,7 +48,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{container=~\"reading-garden-prod-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\"",
+          "expr": "{container=~\"reading-garden-prod-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\" !~ \"(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -84,7 +84,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{container=~\"reading-garden-dev-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\"",
+          "expr": "{container=~\"reading-garden-dev-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\" !~ \"(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)\"",
           "queryType": "range",
           "refId": "A"
         }
