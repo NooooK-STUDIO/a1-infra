@@ -9,6 +9,7 @@ required=(
   'APP_GREEN_HOST_PORT="${APP_GREEN_HOST_PORT:?APP_GREEN_HOST_PORT is required}"'
   'HOST_CADDY_SUDO="${HOST_CADDY_SUDO:-sudo}"'
   'HOST_CADDY_RELOAD_CMD="${HOST_CADDY_RELOAD_CMD:-caddy reload --address unix//var/lib/caddy/caddy-admin.sock --config /etc/caddy/Caddyfile --adapter caddyfile}"'
+  'fix_caddy_log_permissions'
   'ROUTE_RENDERER="${ROUTE_RENDERER:-${APP_DIR}/render-host-caddy-upstream.sh}"'
   'docker compose -f "$COMPOSE_FILE" up --pull never -d app-blue'
   'docker compose -f "$COMPOSE_FILE" --profile green up --pull never -d "app-${STANDBY}"'

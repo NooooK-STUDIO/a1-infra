@@ -18,6 +18,7 @@ APP_GREEN_HOST_PORT="${APP_GREEN_HOST_PORT:?APP_GREEN_HOST_PORT is required}"
 HOST_CADDY_SUDO="${HOST_CADDY_SUDO:-sudo}"
 HOST_CADDY_VALIDATE_CMD="${HOST_CADDY_VALIDATE_CMD:-caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile}"
 HOST_CADDY_RELOAD_CMD="${HOST_CADDY_RELOAD_CMD:-caddy reload --address unix//var/lib/caddy/caddy-admin.sock --config /etc/caddy/Caddyfile --adapter caddyfile}"
+HOST_CADDY_LOG_DIR="${HOST_CADDY_LOG_DIR:-/var/log/caddy}"
 ROUTE_RENDERER="${ROUTE_RENDERER:-${APP_DIR}/render-host-caddy-upstream.sh}"
 
 run_host_caddy_cmd() {
@@ -32,7 +33,20 @@ run_host_caddy_cmd() {
 
 reload_caddy() {
     run_host_caddy_cmd "$HOST_CADDY_VALIDATE_CMD"
+    fix_caddy_log_permissions
     run_host_caddy_cmd "$HOST_CADDY_RELOAD_CMD"
+}
+
+fix_caddy_log_permissions() {
+    run_host_caddy_cmd "
+        if id caddy >/dev/null 2>&1; then
+            caddy_group=\\\$(id -gn caddy)
+            install -d -m 755 '$HOST_CADDY_LOG_DIR'
+            touch '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log'
+            chown caddy:\\\${caddy_group} '$HOST_CADDY_LOG_DIR' '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log'
+            chmod 644 '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log'
+        fi
+    "
 }
 
 route_file_has_upstream() {

@@ -36,8 +36,18 @@ install -d -m 755 \
     "${HOST_CADDY_CONFIG_DIR}/upstreams"
 
 install -d -m 755 "${HOST_CADDY_LOG_DIR}"
+touch \
+    "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
+    "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log"
 if id caddy >/dev/null 2>&1; then
-    chown caddy:caddy "${HOST_CADDY_LOG_DIR}"
+    caddy_group="$(id -gn caddy)"
+    chown caddy:"${caddy_group}" \
+        "${HOST_CADDY_LOG_DIR}" \
+        "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
+        "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log"
+    chmod 644 \
+        "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
+        "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log"
 fi
 
 install -m 644 "${HOST_CADDY_STAGE_DIR}/Caddyfile" "${HOST_CADDY_CONFIG_DIR}/Caddyfile"

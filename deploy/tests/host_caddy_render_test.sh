@@ -14,6 +14,8 @@ grep -Fq 'output file /var/log/caddy/reading-garden-prod-access.log' deploy/host
 grep -Fq 'format json' deploy/host-caddy/sites/reading-garden-dev.caddy
 grep -Fq 'format json' deploy/host-caddy/sites/reading-garden-prod.caddy
 grep -Fq 'HOST_CADDY_LOG_DIR="${HOST_CADDY_LOG_DIR:-/var/log/caddy}"' deploy/bootstrap-host-caddy.sh
+grep -Fq 'reading-garden-dev-access.log' deploy/bootstrap-host-caddy.sh
+grep -Fq 'reading-garden-prod-access.log' deploy/bootstrap-host-caddy.sh
 
 if bash deploy/render-host-caddy-upstream.sh abc 2>/dev/null; then
     echo "non-numeric port must fail" >&2
