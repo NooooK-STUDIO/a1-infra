@@ -320,7 +320,7 @@ groups:
                 type: loki
                 uid: loki
               editorMode: code
-              expr: sum(count_over_time({container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)" [5m]))
+              expr: 'sum(count_over_time({container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)" [5m]))'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: range
@@ -382,7 +382,7 @@ groups:
                 type: loki
                 uid: loki
               editorMode: code
-              expr: sum(count_over_time({container=~"reading-garden-prod-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)" [5m]))
+              expr: 'sum(count_over_time({container=~"reading-garden-prod-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)" [5m]))'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: range
