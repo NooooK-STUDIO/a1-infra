@@ -3,7 +3,7 @@ set -euo pipefail
 
 test -f deploy/monitoring/prometheus/prometheus.yml
 test -f deploy/monitoring/prometheus/rules/reading-garden-dev.yml
-test ! -f deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+test -f deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 test -f deploy/monitoring/blackbox/blackbox.yml
 test -f deploy/monitoring/loki/loki.yml
 test -f deploy/monitoring/alloy/config.alloy
@@ -11,8 +11,8 @@ test -f deploy/monitoring/SECURITY.md
 test -f deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 test -f deploy/monitoring/grafana/provisioning/dashboards/dashboards.yml
 test -f deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+test -f deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 test -f deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-test ! -f deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 test -x deploy/monitoring/scripts/bootstrap-monitoring.sh
 test -x deploy/monitoring/scripts/verify-monitoring.sh
 test -x deploy/monitoring/scripts/check-alerts.sh
@@ -43,6 +43,7 @@ grep -Fq 'uid: prometheus' deploy/monitoring/grafana/provisioning/datasources/da
 grep -Fq 'uid: loki' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 grep -Fq 'url: http://127.0.0.1:3100' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 grep -Fq 'reading-garden-dev-overview' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'reading-garden-prod-overview' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '{source=\"docker\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
@@ -75,12 +76,17 @@ grep -Fq 'Host CPU Usage Percent' deploy/monitoring/grafana/dashboards/reading-g
 grep -Fq 'Host Load 1m' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'jvm_threads_live_threads{job=\"reading-garden-dev-app\"}' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'caddy_config_last_reload_successful{job=\"caddy\"}' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Prod Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq 'Prod Max Latency' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq 'Prod 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq 'Hikari Active Connections' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq 'Process Uptime' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq 'jvm_threads_live_threads{job=\"reading-garden-prod-app\"}' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 grep -Fq '127.0.0.1:19090' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:19091' deploy/monitoring/prometheus/prometheus.yml
-if rg -n 'reading-garden-prod-app|127\.0\.0\.1:1908[01]' deploy/monitoring/prometheus deploy/monitoring/grafana; then
-    echo "prod app scrape targets and dashboards are phase-later, not phase 1" >&2
-    exit 1
-fi
+grep -Fq 'job_name: reading-garden-prod-app' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq '127.0.0.1:19080' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq '127.0.0.1:19081' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:2019' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:18082' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:9115' deploy/monitoring/prometheus/prometheus.yml
@@ -97,10 +103,11 @@ grep -Fq 'ContainerExporterDown' deploy/monitoring/prometheus/rules/reading-gard
 grep -Fq 'CaddyRequestLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'CaddyReloadFailed' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'HostMemoryHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
-if rg -n 'Prod[A-Za-z]+Down|env: prod|reading-garden-prod-app' deploy/monitoring/prometheus/rules; then
-    echo "prod alerting is phase-later, not phase 1" >&2
-    exit 1
-fi
+grep -Fq 'ProdAppMetricsDown' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+grep -Fq 'ProdExternalHealthDown' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+grep -Fq 'Prod5xxRateHigh' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+grep -Fq 'ProdAvgLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+grep -Fq 'ProdHikariPendingConnections' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate' deploy/monitoring/scripts/bootstrap-monitoring.sh
 grep -Fq '/api/datasources/uid/prometheus/health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'VERIFY_TIMEOUT_SECONDS' deploy/monitoring/scripts/verify-monitoring.sh
@@ -110,11 +117,15 @@ grep -Fq '/api/v1/rules' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Dev5xxRateHigh' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'DevAvgLatencyHigh' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'HikariPendingConnections' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Prod5xxRateHigh' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'ProdAvgLatencyHigh' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'ProdHikariPendingConnections' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'CaddyRequestLatencyHigh' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'CaddyReloadFailed' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_datasource' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_dashboard_panels' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/dashboards/uid/reading-garden-prod-overview' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/datasources/uid/loki/health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/loki/api/v1/query_range' deploy/monitoring/scripts/verify-monitoring.sh
@@ -124,6 +135,7 @@ if rg -n 'assert_loki_query_has_result .*source="docker"' deploy/monitoring/scri
     exit 1
 fi
 grep -Fq 'Dev Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Prod Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'App Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod App Logs' deploy/monitoring/scripts/verify-monitoring.sh
@@ -135,8 +147,8 @@ grep -Fq 'python3' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'Active alerts' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'Expected alert rules' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq './scripts/check-alerts.sh' deploy/monitoring/RUNBOOK.md
-if rg -n 'reading-garden-prod-app|PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
-    echo "phase 1 verification must not require prod app metrics or prod live docs" >&2
+if rg -n 'PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
+    echo "monitoring verification must not require prod live docs" >&2
     exit 1
 fi
 grep -Fq 'postgres_exporter Later' deploy/monitoring/RUNBOOK.md

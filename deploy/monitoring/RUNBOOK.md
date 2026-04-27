@@ -57,11 +57,12 @@ cd /opt/infra/monitoring
 Expected checks:
 
 - Prometheus readiness succeeds.
-- Prometheus active targets include `reading-garden-dev-app`, `caddy`, `node-exporter`, `cadvisor`, and `blackbox-http`.
+- Prometheus active targets include `reading-garden-dev-app`, `reading-garden-prod-app`, `caddy`, `node-exporter`, `cadvisor`, and `blackbox-http`.
 - Loki is ready and has Docker container logs plus Caddy systemd logs.
-- The app scrape uses localhost management ports `19090` and `19091`.
+- The dev app scrape uses localhost management ports `19090` and `19091`.
+- The prod app scrape uses localhost management ports `19080` and `19081`; at least one blue/green target must be up.
 - Grafana Prometheus and Loki datasources are healthy.
-- Grafana includes `ReadingGarden Dev Overview` and `ReadingGarden Logs`.
+- Grafana includes `ReadingGarden Dev Overview`, `ReadingGarden Prod Overview`, and `ReadingGarden Logs`.
 - dev `/api/health` and `/v3/api-docs` respond.
 
 ## Logs

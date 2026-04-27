@@ -15,6 +15,11 @@ EXPECTED_ALERT_RULES=(
   Dev5xxRateHigh
   DevAvgLatencyHigh
   HikariPendingConnections
+  ProdAppMetricsDown
+  ProdExternalHealthDown
+  Prod5xxRateHigh
+  ProdAvgLatencyHigh
+  ProdHikariPendingConnections
   CaddyMetricsDown
   CaddyRequestLatencyHigh
   CaddyReloadFailed
@@ -140,16 +145,21 @@ wait_for_grafana_loki_datasource() {
 
 wait_for_grafana_dashboard_panels() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
-  local dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-dev-overview"
+  local dev_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-dev-overview"
+  local prod_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-prod-overview"
   local response
 
-  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
+  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dev_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Dev Avg Latency" &&
     printf '%s' "$response" | grep -Fq "Caddy p95 Duration" &&
     printf '%s' "$response" | grep -Fq "Host CPU Usage Percent" &&
+    printf '%s' "$response" | grep -Fq "Hikari Active Connections" &&
+    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$prod_dashboard_url")" &&
+    printf '%s' "$response" | grep -Fq "Prod Avg Latency" &&
+    printf '%s' "$response" | grep -Fq "Prod 5xx Rate" &&
     printf '%s' "$response" | grep -Fq "Hikari Active Connections"; do
     if (( SECONDS >= deadline )); then
-      echo "Grafana dev dashboard did not load expected phase 1 panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      echo "Grafana app dashboards did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1
     fi
     sleep 2
@@ -179,6 +189,8 @@ wait_for_http "${LOKI_URL}/ready" "Loki readiness"
 wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-dev-app"}) > 0' 'reading-garden-dev-app'
+assert_prometheus_query_has_result 'sum(up{job="reading-garden-prod-app"}) > 0' 'reading-garden-prod-app'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-http",instance="https://readinggarden.duckdns.org/api/health"} == 1' 'prod public health blackbox'
 assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'
 assert_prometheus_query_has_result 'up{job="node-exporter"} == 1' 'node-exporter'
 assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'

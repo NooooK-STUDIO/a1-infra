@@ -26,6 +26,17 @@ scrape_configs:
           service: reading-garden-kotlin
           component: app
 
+  - job_name: reading-garden-prod-app
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - 127.0.0.1:19080
+          - 127.0.0.1:19081
+        labels:
+          env: prod
+          service: reading-garden-kotlin
+          component: app
+
   - job_name: caddy
     metrics_path: /metrics
     static_configs:

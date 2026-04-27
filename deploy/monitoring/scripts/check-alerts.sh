@@ -8,6 +8,11 @@ EXPECTED_ALERT_RULES=(
   Dev5xxRateHigh
   DevAvgLatencyHigh
   HikariPendingConnections
+  ProdAppMetricsDown
+  ProdExternalHealthDown
+  Prod5xxRateHigh
+  ProdAvgLatencyHigh
+  ProdHikariPendingConnections
   CaddyMetricsDown
   CaddyRequestLatencyHigh
   CaddyReloadFailed
