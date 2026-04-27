@@ -170,7 +170,7 @@ signals:
 ## PostgreSQL Metrics
 
 PostgreSQL metrics use `postgres_exporter` on `127.0.0.1:9187`. The exporter
-connects to shared PostgreSQL through `host.docker.internal:15432/postgres` as the
+uses host networking and connects to shared PostgreSQL through `127.0.0.1:15432/postgres` as the
 dedicated `reading_garden_monitoring` role.
 
 Keep the exporter password in both host-local places:

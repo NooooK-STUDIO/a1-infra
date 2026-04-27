@@ -43,8 +43,8 @@ grep -Fq 'grafana/loki' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/loki:3.5.2' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/alloy' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'quay.io/prometheuscommunity/postgres-exporter:v0.19.1' deploy/monitoring/docker-compose.monitoring.yml
-grep -Fq 'host.docker.internal:host-gateway' deploy/monitoring/docker-compose.monitoring.yml
-grep -Fq 'DATA_SOURCE_URI: host.docker.internal:15432/postgres?sslmode=disable' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq -- '--web.listen-address=127.0.0.1:9187' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'DATA_SOURCE_URI: 127.0.0.1:15432/postgres?sslmode=disable' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'DATA_SOURCE_USER: reading_garden_monitoring' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'DATA_SOURCE_PASS: ${POSTGRES_EXPORTER_PASSWORD:?POSTGRES_EXPORTER_PASSWORD is required}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'PG_EXPORTER_AUTO_DISCOVER_DATABASES: "true"' deploy/monitoring/docker-compose.monitoring.yml

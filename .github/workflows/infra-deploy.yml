@@ -90,7 +90,7 @@ jobs:
           File mapping: docker-compose.postgres-shared.yml -> /opt/infra/postgresql/docker-compose.yml
           Host-local secrets preserved: /opt/infra/postgresql/secrets/*
           Apply command: /opt/infra/postgresql/bootstrap-shared-postgres.sh
-          Verify command: docker compose -f /opt/infra/postgresql/docker-compose.yml ps
+          Verify command: docker ps --filter name=shared-postgres
           PLAN
           }
 
@@ -188,7 +188,7 @@ jobs:
             cp -R deploy/postgres/init .postgres-deploy/postgres/init
 
             upload_dir .postgres-deploy "$stage_dir"
-            remote_exec "sudo mkdir -p /opt/infra/postgresql && sudo cp '$stage_dir/docker-compose.postgres-shared.yml' /opt/infra/postgresql/docker-compose.yml && sudo rm -rf /opt/infra/postgresql/init && sudo cp -a '$stage_dir/postgres/init' /opt/infra/postgresql/init && sudo cp '$stage_dir/bootstrap-shared-postgres.sh' /opt/infra/postgresql/bootstrap-shared-postgres.sh && sudo chmod +x /opt/infra/postgresql/bootstrap-shared-postgres.sh && sudo /opt/infra/postgresql/bootstrap-shared-postgres.sh && docker compose -f /opt/infra/postgresql/docker-compose.yml ps"
+            remote_exec "sudo mkdir -p /opt/infra/postgresql && sudo cp '$stage_dir/docker-compose.postgres-shared.yml' /opt/infra/postgresql/docker-compose.yml && sudo rm -rf /opt/infra/postgresql/init && sudo cp -a '$stage_dir/postgres/init' /opt/infra/postgresql/init && sudo cp '$stage_dir/bootstrap-shared-postgres.sh' /opt/infra/postgresql/bootstrap-shared-postgres.sh && sudo chmod +x /opt/infra/postgresql/bootstrap-shared-postgres.sh && sudo /opt/infra/postgresql/bootstrap-shared-postgres.sh && docker ps --filter name=shared-postgres"
           }
 
           case "$target" in
