@@ -84,6 +84,21 @@ jobs:
             prom/prometheus:v3.4.0 \
             -c 'promtool check rules /etc/prometheus/rules/*.yml'
 
+      - name: Check Loki and Alloy configs
+        run: |
+          set -euo pipefail
+
+          docker run --rm \
+            -v "$PWD/deploy/monitoring/loki:/etc/loki:ro" \
+            grafana/loki:3.5.0 \
+            -config.file=/etc/loki/loki.yml \
+            -verify-config
+
+          docker run --rm \
+            -v "$PWD/deploy/monitoring/alloy:/etc/alloy:ro" \
+            grafana/alloy:v1.9.1 \
+            validate /etc/alloy/config.alloy
+
       - name: Check host Caddy config template
         run: |
           set -euo pipefail

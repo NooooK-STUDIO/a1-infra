@@ -5,7 +5,7 @@
 - Monitoring directory: `/opt/infra/monitoring`
 - Compose file: `/opt/infra/monitoring/docker-compose.yml`
 - Host-local env file: `/opt/infra/monitoring/.env`
-- Grafana and Prometheus host ports are bound to `127.0.0.1` only.
+- Grafana, Prometheus, and Loki host ports are bound to `127.0.0.1` only.
 
 ## SSH Tunnel
 
@@ -58,9 +58,26 @@ Expected checks:
 
 - Prometheus readiness succeeds.
 - Prometheus active targets include `reading-garden-dev-app`, `caddy`, `node-exporter`, `cadvisor`, and `blackbox-http`.
+- Loki is ready and has Docker container logs plus Caddy systemd logs.
 - The app scrape uses localhost management ports `19090` and `19091`.
-- Grafana Prometheus datasource is healthy.
+- Grafana Prometheus and Loki datasources are healthy.
+- Grafana includes `ReadingGarden Dev Overview` and `ReadingGarden Logs`.
 - dev `/api/health` and `/v3/api-docs` respond.
+
+## Logs
+
+Open Grafana through the SSH tunnel and use the `ReadingGarden Logs` dashboard.
+
+Useful Loki queries:
+
+```logql
+{source="docker"}
+{unit="caddy.service"}
+{container="reading-garden-dev-blue"}
+{container="reading-garden-dev-green"}
+```
+
+Docker container logs are collected through the Docker socket. Host Caddy logs are collected from the systemd journal and labeled with `unit="caddy.service"`.
 
 ## Alert Status
 
@@ -90,10 +107,6 @@ Add Grafana Alerting and a Discord contact point in a separate change after the 
 ## postgres_exporter Later
 
 Add postgres_exporter after creating a dedicated PostgreSQL monitoring role. Track `pg_up`, connections, locks, cache hit rate, database size, and baseline transaction/query metrics.
-
-## Loki And Alloy Later
-
-Add Loki and Alloy after metrics and DB monitoring are stable. Use Alloy to collect Docker container logs and host Caddy journald logs.
 
 ## Alertmanager Later
 

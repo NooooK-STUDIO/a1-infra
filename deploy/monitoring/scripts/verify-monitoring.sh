@@ -6,6 +6,7 @@ COMPOSE_FILE="${MONITORING_DIR}/docker-compose.yml"
 ENV_FILE="${MONITORING_DIR}/.env"
 GRAFANA_URL="${GRAFANA_URL:-http://127.0.0.1:3000}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:9090}"
+LOKI_URL="${LOKI_URL:-http://127.0.0.1:3100}"
 DEV_BASE_URL="${DEV_BASE_URL:-https://readinggarden-dev.duckdns.org}"
 VERIFY_TIMEOUT_SECONDS="${VERIFY_TIMEOUT_SECONDS:-60}"
 EXPECTED_ALERT_RULES=(
@@ -68,6 +69,23 @@ assert_prometheus_query_has_result() {
   done
 }
 
+assert_loki_query_has_result() {
+  local query="$1"
+  local label="$2"
+  local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
+
+  until curl -fsS -G \
+    --data-urlencode "query=${query}" \
+    --data-urlencode "limit=1" \
+    "${LOKI_URL}/loki/api/v1/query_range" | grep -Fq '"streams":[{'; do
+    if (( SECONDS >= deadline )); then
+      echo "Loki query returned no log streams within ${VERIFY_TIMEOUT_SECONDS}s for ${label}: ${query}" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
 response_has_expected_alert_rules() {
   local response="$1"
   local expected_alert
@@ -107,6 +125,19 @@ wait_for_grafana_datasource() {
   done
 }
 
+wait_for_grafana_loki_datasource() {
+  local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
+
+  until curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+    "${GRAFANA_URL}/api/datasources/uid/loki/health" | grep -Fq '"status":"OK"'; do
+    if (( SECONDS >= deadline )); then
+      echo "Grafana Loki datasource did not become healthy within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
 wait_for_grafana_dashboard_panels() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
   local dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-dev-overview"
@@ -125,7 +156,24 @@ wait_for_grafana_dashboard_panels() {
   done
 }
 
+wait_for_grafana_logs_dashboard_panels() {
+  local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
+  local dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-logs"
+  local response
+
+  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
+    printf '%s' "$response" | grep -Fq "Docker Container Logs" &&
+    printf '%s' "$response" | grep -Fq "Caddy Systemd Logs"; do
+    if (( SECONDS >= deadline )); then
+      echo "Grafana logs dashboard did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
 wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"
+wait_for_http "${LOKI_URL}/ready" "Loki readiness"
 wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-dev-app"}) > 0' 'reading-garden-dev-app'
@@ -133,9 +181,13 @@ assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'
 assert_prometheus_query_has_result 'up{job="node-exporter"} == 1' 'node-exporter'
 assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'
 assert_prometheus_query_has_result 'up{job="blackbox-http"} == 1' 'blackbox-http'
+assert_loki_query_has_result '{source="docker"}' 'docker container logs'
+assert_loki_query_has_result '{unit="caddy.service"}' 'caddy systemd logs'
 
 wait_for_grafana_datasource
+wait_for_grafana_loki_datasource
 wait_for_grafana_dashboard_panels
+wait_for_grafana_logs_dashboard_panels
 
 curl -fsS "${DEV_BASE_URL}/api/health" | grep -Fq '"UP"'
 curl -fsS "${DEV_BASE_URL}/v3/api-docs" >/dev/null

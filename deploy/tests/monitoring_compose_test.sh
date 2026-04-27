@@ -97,21 +97,32 @@ assert_no_published_ports() {
 
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'prometheus:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'grafana:'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'loki:'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'alloy:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'node-exporter:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'cadvisor:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'blackbox-exporter:'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'container_name: a1-monitoring-loki'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'container_name: a1-monitoring-alloy'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/etc/grafana/provisioning'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/lib/grafana/dashboards'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/etc/loki/loki.yml'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/etc/alloy/config.alloy'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/run/docker.sock'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/log/journal'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/run/log/journal'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'network_mode: host'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_HTTP_ADDR: 127.0.0.1'
 
 assert_no_published_ports prometheus
 assert_no_published_ports grafana
+assert_no_published_ports loki
+assert_no_published_ports alloy
 assert_localhost_port node-exporter 9100 9100
 assert_localhost_port cadvisor 18082 8080
 assert_localhost_port blackbox-exporter 9115 9115
 
-if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|loki:|alloy:|postgres-exporter:|DISCORD_WEBHOOK_URL'; then
+if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|postgres-exporter:|DISCORD_WEBHOOK_URL'; then
     echo "deferred services and Discord config must not be present in phase 1" >&2
     exit 1
 fi

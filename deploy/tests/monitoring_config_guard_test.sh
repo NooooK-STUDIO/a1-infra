@@ -5,10 +5,13 @@ test -f deploy/monitoring/prometheus/prometheus.yml
 test -f deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 test ! -f deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 test -f deploy/monitoring/blackbox/blackbox.yml
+test -f deploy/monitoring/loki/loki.yml
+test -f deploy/monitoring/alloy/config.alloy
 test -f deploy/monitoring/SECURITY.md
 test -f deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 test -f deploy/monitoring/grafana/provisioning/dashboards/dashboards.yml
 test -f deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+test -f deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 test ! -f deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 test -x deploy/monitoring/scripts/bootstrap-monitoring.sh
 test -x deploy/monitoring/scripts/verify-monitoring.sh
@@ -18,6 +21,8 @@ test -f deploy/monitoring/RUNBOOK.md
 grep -Fq 'retention.time=7d' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'container_name: a1-monitoring-prometheus' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'container_name: a1-monitoring-grafana' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'container_name: a1-monitoring-loki' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'container_name: a1-monitoring-alloy' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'container_name: a1-monitoring-node-exporter' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'container_name: a1-monitoring-cadvisor' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'container_name: a1-monitoring-blackbox-exporter' deploy/monitoring/docker-compose.monitoring.yml
@@ -27,12 +32,20 @@ if rg -n 'container_name: reading-garden-monitoring-' deploy/monitoring/docker-c
 fi
 grep -Fq 'gcr.io/cadvisor/cadvisor:v0.52.1' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'prom/blackbox-exporter' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'grafana/loki' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'grafana/alloy' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_METRICS_ENABLED: "true"' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'network_mode: host' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq -- '--web.listen-address=127.0.0.1:9090' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_SERVER_HTTP_ADDR: 127.0.0.1' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'uid: prometheus' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
+grep -Fq 'uid: loki' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
+grep -Fq 'url: http://127.0.0.1:3100' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 grep -Fq 'reading-garden-dev-overview' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq '{source=\"docker\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq 'Dev Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'Dev Max Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'Dev 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
@@ -84,8 +97,13 @@ grep -Fq 'CaddyReloadFailed' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_datasource' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_dashboard_panels' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/datasources/uid/loki/health' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/dashboards/uid/reading-garden-logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/loki/api/v1/query_range' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Dev Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Docker Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Caddy Systemd Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/v1/alerts' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq '/api/v1/rules' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'python3' deploy/monitoring/scripts/check-alerts.sh
@@ -97,10 +115,11 @@ if rg -n 'reading-garden-prod-app|PROD_BASE_URL|readinggarden.duckdns.org/v3/api
     exit 1
 fi
 grep -Fq 'postgres_exporter Later' deploy/monitoring/RUNBOOK.md
-grep -Fq 'Loki And Alloy Later' deploy/monitoring/RUNBOOK.md
+grep -Fq './scripts/verify-monitoring.sh' deploy/monitoring/RUNBOOK.md
+grep -Fq 'ReadingGarden Logs' deploy/monitoring/RUNBOOK.md
 grep -Fq 'Alertmanager Later' deploy/monitoring/RUNBOOK.md
 
-if rg -n 'discord(app)?\.com/api/webhooks/[0-9]+|DISCORD_WEBHOOK_URL|type: discord|alertmanager|loki:|alloy:|postgres-exporter:' deploy/monitoring; then
+if rg -n 'discord(app)?\.com/api/webhooks/[0-9]+|DISCORD_WEBHOOK_URL|type: discord|alertmanager|postgres-exporter:' deploy/monitoring; then
     echo "deferred secrets or services must not be committed in phase 1" >&2
     exit 1
 fi
