@@ -7,13 +7,19 @@
 - Host-local env file: `/opt/infra/monitoring/.env`
 - Grafana, Prometheus, and Loki host ports are bound to `127.0.0.1` only.
 
-## SSH Tunnel
+## Grafana Access
+
+Grafana is published through host Caddy at:
+
+- `https://nooook-monitoring.duckdns.org`
+
+The Grafana process still listens on `127.0.0.1:3000` only. Caddy terminates public HTTPS and proxies to that loopback port.
+
+SSH tunnel access remains available for fallback:
 
 ```bash
 ssh -i <ssh-key-path> -L 3000:127.0.0.1:3000 <ssh-user>@<oci-host>
 ```
-
-Open `http://localhost:3000`.
 
 ## Deploy Or Update
 
@@ -45,7 +51,10 @@ cd /opt/infra/monitoring
 GRAFANA_HOST_PORT=3000
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=<host-local-password>
+GRAFANA_ROOT_URL=https://nooook-monitoring.duckdns.org
 GRAFANA_DISCORD_WEBHOOK_URL=<host-local-discord-webhook-url>
+GRAFANA_DISCORD_DEV_WEBHOOK_URL=<host-local-dev-discord-webhook-url>
+GRAFANA_DISCORD_PROD_WEBHOOK_URL=<host-local-prod-discord-webhook-url>
 ```
 
 ## Verify
@@ -117,8 +126,10 @@ Discord alert delivery uses Grafana Alerting. Keep the webhook URL only in `/opt
 Grafana provisions:
 
 - `reading-garden-discord` contact point.
-- Root notification policy that sends ReadingGarden alerts to Discord.
-- Grafana-managed alert rules for dev/prod external health, dev/prod app metrics, Caddy metrics, and host disk usage.
+- `reading-garden-discord-dev` and `reading-garden-discord-prod` contact points.
+- Notification policy routes `env=dev` alerts to the dev Discord webhook and `env=prod` alerts to the prod Discord webhook.
+- Host/common alerts use the default `reading-garden-discord` contact point.
+- Grafana-managed alert rules for dev/prod external health, dev/prod app metrics, dev/prod app error logs, Caddy metrics, and host disk usage.
 
 ## postgres_exporter Later
 

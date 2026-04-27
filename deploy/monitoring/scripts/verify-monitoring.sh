@@ -196,6 +196,8 @@ wait_for_grafana_alerting() {
     grafana-dev-app-metrics
     grafana-prod-app-metrics
     grafana-caddy-metrics
+    grafana-dev-app-error-logs
+    grafana-prod-app-error-logs
     grafana-host-disk-full
   )
   local response
@@ -204,9 +206,13 @@ wait_for_grafana_alerting() {
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$contact_points_url")" &&
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord"' &&
+    printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-dev"' &&
+    printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-prod"' &&
     printf '%s' "$response" | grep -Fq '"type":"discord"' &&
     response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
-    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord"'; do
+    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord"' &&
+    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-dev"' &&
+    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-prod"'; do
     if (( SECONDS >= deadline )); then
       echo "Grafana Discord alerting contact point or notification policy did not load within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1

@@ -3,7 +3,7 @@ groups:
     rules:
       - alert: ProdAppMetricsDown
         expr: sum(up{job="reading-garden-prod-app"}) == 0
-        for: 2m
+        for: 1m
         labels:
           severity: critical
           env: prod
@@ -15,7 +15,7 @@ groups:
 
       - alert: ProdExternalHealthDown
         expr: probe_success{job="blackbox-http",instance="https://readinggarden.duckdns.org/api/health"} == 0
-        for: 2m
+        for: 1m
         labels:
           severity: critical
           env: prod

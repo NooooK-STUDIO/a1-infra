@@ -57,7 +57,7 @@ groups:
               type: math
         noDataState: Alerting
         execErrState: Alerting
-        for: 2m
+        for: 1m
         annotations:
           summary: Dev external health is down.
           runbook_url: https://github.com/ReadingGarden/a1-infra/blob/main/deploy/monitoring/RUNBOOK.md
@@ -117,7 +117,7 @@ groups:
               type: math
         noDataState: Alerting
         execErrState: Alerting
-        for: 2m
+        for: 1m
         annotations:
           summary: Prod external health is down.
           runbook_url: https://github.com/ReadingGarden/a1-infra/blob/main/deploy/monitoring/RUNBOOK.md
@@ -177,7 +177,7 @@ groups:
               type: math
         noDataState: Alerting
         execErrState: Alerting
-        for: 2m
+        for: 1m
         annotations:
           summary: Dev app Prometheus metrics are down.
           runbook_url: https://github.com/ReadingGarden/a1-infra/blob/main/deploy/monitoring/RUNBOOK.md
@@ -237,7 +237,7 @@ groups:
               type: math
         noDataState: Alerting
         execErrState: Alerting
-        for: 2m
+        for: 1m
         annotations:
           summary: Prod app Prometheus metrics are down.
           runbook_url: https://github.com/ReadingGarden/a1-infra/blob/main/deploy/monitoring/RUNBOOK.md
@@ -297,7 +297,7 @@ groups:
               type: math
         noDataState: Alerting
         execErrState: Alerting
-        for: 2m
+        for: 1m
         annotations:
           summary: Host Caddy metrics are down.
           runbook_url: https://github.com/ReadingGarden/a1-infra/blob/main/deploy/monitoring/RUNBOOK.md
@@ -305,6 +305,124 @@ groups:
           service: reading-garden
           env: host
           severity: critical
+
+      - uid: grafana-dev-app-error-logs
+        title: GrafanaDevAppErrorLogsDetected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              expr: sum(count_over_time({container=~"reading-garden-dev-.*"} |~ "(?i)(error|exception|traceback)" [5m]))
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: range
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: $B > 0
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: math
+        noDataState: OK
+        execErrState: Alerting
+        for: 1m
+        annotations:
+          summary: Dev app error logs were detected in Loki.
+          runbook_url: https://github.com/ReadingGarden/a1-infra/blob/main/deploy/monitoring/RUNBOOK.md
+        labels:
+          service: reading-garden
+          env: dev
+          severity: warning
+
+      - uid: grafana-prod-app-error-logs
+        title: GrafanaProdAppErrorLogsDetected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              expr: sum(count_over_time({container=~"reading-garden-prod-.*"} |~ "(?i)(error|exception|traceback)" [5m]))
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: range
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: $B > 0
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: math
+        noDataState: OK
+        execErrState: Alerting
+        for: 1m
+        annotations:
+          summary: Prod app error logs were detected in Loki.
+          runbook_url: https://github.com/ReadingGarden/a1-infra/blob/main/deploy/monitoring/RUNBOOK.md
+        labels:
+          service: reading-garden
+          env: prod
+          severity: warning
 
       - uid: grafana-host-disk-full
         title: GrafanaHostDiskAlmostFull

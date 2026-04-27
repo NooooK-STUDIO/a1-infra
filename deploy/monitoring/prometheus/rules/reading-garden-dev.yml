@@ -3,7 +3,7 @@ groups:
     rules:
       - alert: DevAppMetricsDown
         expr: sum(up{job="reading-garden-dev-app"}) == 0
-        for: 2m
+        for: 1m
         labels:
           severity: critical
           env: dev
@@ -15,7 +15,7 @@ groups:
 
       - alert: DevExternalHealthDown
         expr: probe_success{job="blackbox-http",instance="https://readinggarden-dev.duckdns.org/api/health"} == 0
-        for: 2m
+        for: 1m
         labels:
           severity: critical
           env: dev
@@ -63,7 +63,7 @@ groups:
 
       - alert: CaddyMetricsDown
         expr: up{job="caddy"} == 0
-        for: 2m
+        for: 1m
         labels:
           severity: warning
           env: infra

@@ -29,7 +29,10 @@ services:
       GF_METRICS_ENABLED: "true"
       GF_SERVER_HTTP_ADDR: 127.0.0.1
       GF_SERVER_HTTP_PORT: ${GRAFANA_HOST_PORT:-3000}
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-https://nooook-monitoring.duckdns.org}
       GRAFANA_DISCORD_WEBHOOK_URL: ${GRAFANA_DISCORD_WEBHOOK_URL:?GRAFANA_DISCORD_WEBHOOK_URL is required}
+      GRAFANA_DISCORD_DEV_WEBHOOK_URL: ${GRAFANA_DISCORD_DEV_WEBHOOK_URL:?GRAFANA_DISCORD_DEV_WEBHOOK_URL is required}
+      GRAFANA_DISCORD_PROD_WEBHOOK_URL: ${GRAFANA_DISCORD_PROD_WEBHOOK_URL:?GRAFANA_DISCORD_PROD_WEBHOOK_URL is required}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro

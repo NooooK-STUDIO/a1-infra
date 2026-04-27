@@ -11,6 +11,36 @@ policies:
     group_interval: 5m
     repeat_interval: 4h
     routes:
+      - receiver: reading-garden-discord-prod
+        object_matchers:
+          - - service
+            - =
+            - reading-garden
+          - - env
+            - =
+            - prod
+        group_by:
+          - grafana_folder
+          - alertname
+          - env
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+      - receiver: reading-garden-discord-dev
+        object_matchers:
+          - - service
+            - =
+            - reading-garden
+          - - env
+            - =
+            - dev
+        group_by:
+          - grafana_folder
+          - alertname
+          - env
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
       - receiver: reading-garden-discord
         object_matchers:
           - - service

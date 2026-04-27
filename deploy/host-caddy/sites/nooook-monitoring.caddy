@@ -1,0 +1,13 @@
+nooook-monitoring.duckdns.org {
+    log nooook_monitoring {
+        output file /var/log/caddy/nooook-monitoring-access.log {
+            roll_size 10MiB
+            roll_keep 5
+            roll_keep_for 72h
+        }
+        format json
+    }
+
+    import common_proxy
+    reverse_proxy 127.0.0.1:3000
+}

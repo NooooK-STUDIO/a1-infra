@@ -67,6 +67,8 @@ jobs:
 
           GRAFANA_ADMIN_PASSWORD=ci-secret \
           GRAFANA_DISCORD_WEBHOOK_URL=https://example.invalid/discord-webhook \
+          GRAFANA_DISCORD_DEV_WEBHOOK_URL=https://example.invalid/dev-discord-webhook \
+          GRAFANA_DISCORD_PROD_WEBHOOK_URL=https://example.invalid/prod-discord-webhook \
             docker compose -f deploy/monitoring/docker-compose.monitoring.yml config >/dev/null
 
       - name: Check Prometheus config and rules

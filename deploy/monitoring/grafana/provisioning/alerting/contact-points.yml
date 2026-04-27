@@ -12,3 +12,25 @@ contactPoints:
           use_discord_username: false
           title: '{{ template "default.title" . }}'
           message: '{{ template "default.message" . }}'
+  - orgId: 1
+    name: reading-garden-discord-dev
+    receivers:
+      - uid: reading-garden-discord-dev
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: $GRAFANA_DISCORD_DEV_WEBHOOK_URL
+          use_discord_username: false
+          title: '{{ template "default.title" . }}'
+          message: '{{ template "default.message" . }}'
+  - orgId: 1
+    name: reading-garden-discord-prod
+    receivers:
+      - uid: reading-garden-discord-prod
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: $GRAFANA_DISCORD_PROD_WEBHOOK_URL
+          use_discord_username: false
+          title: '{{ template "default.title" . }}'
+          message: '{{ template "default.message" . }}'

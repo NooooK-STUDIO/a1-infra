@@ -13,6 +13,8 @@ test -f "$ENV_FILE"
 required_keys=(
   GRAFANA_ADMIN_PASSWORD
   GRAFANA_DISCORD_WEBHOOK_URL
+  GRAFANA_DISCORD_DEV_WEBHOOK_URL
+  GRAFANA_DISCORD_PROD_WEBHOOK_URL
 )
 
 for key in "${required_keys[@]}"; do
