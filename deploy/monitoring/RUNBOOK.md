@@ -96,8 +96,8 @@ Useful Loki queries:
 {source="docker"}
 {container=~"reading-garden-prod-.*"}
 {container=~"reading-garden-dev-.*"}
-{container=~"reading-garden-prod-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"
-{container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"
+{container=~"reading-garden-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"
+{container=~"reading-garden-dev-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"
 {container="reading-garden-prod-blue"}
 {container="reading-garden-prod-green"}
 {unit="caddy.service"}
