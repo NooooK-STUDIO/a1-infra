@@ -49,7 +49,17 @@ loki.process "docker" {
     }
   }
 
+  forward_to = [loki.relabel.app_containers.receiver]
+}
+
+loki.relabel "app_containers" {
   forward_to = [loki.write.local.receiver]
+
+  rule {
+    source_labels = ["container"]
+    regex         = "reading-garden-(prod|dev)-.*"
+    action        = "keep"
+  }
 }
 
 loki.relabel "journal" {

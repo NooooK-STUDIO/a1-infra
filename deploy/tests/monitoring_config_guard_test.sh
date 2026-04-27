@@ -52,6 +52,8 @@ grep -Fq 'loki.source.docker "containers"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'loki.source.journal "caddy"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'action        = "keep"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'regex         = "/reading-garden-(prod|dev)-.*"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'loki.relabel "app_containers"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'regex         = "reading-garden-(prod|dev)-.*"' deploy/monitoring/alloy/config.alloy
 if rg -n 'a1-monitoring-loki|shared-postgres' deploy/monitoring/grafana/dashboards/reading-garden-logs.json deploy/monitoring/alloy/config.alloy; then
     echo "log collection must avoid monitoring self-log loops and shared-postgres noise" >&2
     exit 1
