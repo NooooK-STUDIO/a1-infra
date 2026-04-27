@@ -13,6 +13,12 @@ discovery.relabel "containers" {
 
   rule {
     source_labels = ["__meta_docker_container_name"]
+    regex         = "/reading-garden-(prod|dev)-.*"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
     regex         = "/(.*)"
     target_label  = "container"
   }
@@ -30,8 +36,7 @@ discovery.relabel "containers" {
 
 loki.source.docker "containers" {
   host             = "unix:///var/run/docker.sock"
-  targets          = discovery.docker.containers.targets
-  relabel_rules    = discovery.relabel.containers.rules
+  targets          = discovery.relabel.containers.output
   forward_to       = [loki.process.docker.receiver]
   refresh_interval = "10s"
 }

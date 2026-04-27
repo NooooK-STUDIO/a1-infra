@@ -45,9 +45,17 @@ grep -Fq 'reading-garden-dev-overview' deploy/monitoring/grafana/dashboards/read
 grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '{source=\"docker\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq '{container=~\"reading-garden-prod-.*\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq '{container=~\"reading-garden-dev-.*\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq 'loki.source.docker "containers"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'loki.source.journal "caddy"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'action        = "keep"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'regex         = "/reading-garden-(prod|dev)-.*"' deploy/monitoring/alloy/config.alloy
+if rg -n 'a1-monitoring-loki|shared-postgres' deploy/monitoring/grafana/dashboards/reading-garden-logs.json deploy/monitoring/alloy/config.alloy; then
+    echo "log collection must avoid monitoring self-log loops and shared-postgres noise" >&2
+    exit 1
+fi
 grep -Fq 'matches       = "SYSLOG_IDENTIFIER=caddy"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'path          = "/var/log/journal"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'retention_period: 72h' deploy/monitoring/loki/loki.yml
@@ -106,9 +114,15 @@ grep -Fq '/api/datasources/uid/loki/health' deploy/monitoring/scripts/verify-mon
 grep -Fq '/api/dashboards/uid/reading-garden-logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/loki/api/v1/query_range' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '"result":[{' deploy/monitoring/scripts/verify-monitoring.sh
+if rg -n 'assert_loki_query_has_result .*source="docker"' deploy/monitoring/scripts/verify-monitoring.sh; then
+    echo "monitoring verification must not require app container logs on every run" >&2
+    exit 1
+fi
 grep -Fq 'Dev Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Docker Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'App Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Prod App Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Dev App Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy Systemd Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/v1/alerts' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq '/api/v1/rules' deploy/monitoring/scripts/check-alerts.sh
@@ -123,6 +137,8 @@ fi
 grep -Fq 'postgres_exporter Later' deploy/monitoring/RUNBOOK.md
 grep -Fq './scripts/verify-monitoring.sh' deploy/monitoring/RUNBOOK.md
 grep -Fq 'ReadingGarden Logs' deploy/monitoring/RUNBOOK.md
+grep -Fq '{container=~"reading-garden-prod-.*"}' deploy/monitoring/RUNBOOK.md
+grep -Fq 'self-log loops' deploy/monitoring/RUNBOOK.md
 grep -Fq 'Alertmanager Later' deploy/monitoring/RUNBOOK.md
 
 if rg -n 'discord(app)?\.com/api/webhooks/[0-9]+|DISCORD_WEBHOOK_URL|type: discord|alertmanager|postgres-exporter:' deploy/monitoring; then

@@ -72,12 +72,16 @@ Useful Loki queries:
 
 ```logql
 {source="docker"}
+{container=~"reading-garden-prod-.*"}
+{container=~"reading-garden-dev-.*"}
+{container="reading-garden-prod-blue"}
+{container="reading-garden-prod-green"}
 {unit="caddy.service"}
 {container="reading-garden-dev-blue"}
 {container="reading-garden-dev-green"}
 ```
 
-Docker container logs are collected through the Docker socket. Host Caddy logs are collected from the systemd journal and labeled with `unit="caddy.service"`.
+ReadingGarden app container logs are collected through the Docker socket. Monitoring containers and shared PostgreSQL are intentionally excluded to avoid self-log loops and noisy database history. Host Caddy logs are collected from the systemd journal and labeled with `unit="caddy.service"`.
 
 ## Alert Status
 

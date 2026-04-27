@@ -162,7 +162,9 @@ wait_for_grafana_logs_dashboard_panels() {
   local response
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
-    printf '%s' "$response" | grep -Fq "Docker Container Logs" &&
+    printf '%s' "$response" | grep -Fq "App Container Logs" &&
+    printf '%s' "$response" | grep -Fq "Prod App Logs" &&
+    printf '%s' "$response" | grep -Fq "Dev App Logs" &&
     printf '%s' "$response" | grep -Fq "Caddy Systemd Logs"; do
     if (( SECONDS >= deadline )); then
       echo "Grafana logs dashboard did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
@@ -181,7 +183,6 @@ assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'
 assert_prometheus_query_has_result 'up{job="node-exporter"} == 1' 'node-exporter'
 assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'
 assert_prometheus_query_has_result 'up{job="blackbox-http"} == 1' 'blackbox-http'
-assert_loki_query_has_result '{source="docker"}' 'docker container logs'
 assert_loki_query_has_result '{unit="caddy.service"}' 'caddy systemd logs'
 
 wait_for_grafana_datasource
