@@ -67,6 +67,24 @@ wait_for_grafana_datasource() {
   done
 }
 
+wait_for_grafana_dashboard_panels() {
+  local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
+  local dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-dev-overview"
+  local response
+
+  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
+    printf '%s' "$response" | grep -Fq "Dev Avg Latency" &&
+    printf '%s' "$response" | grep -Fq "Caddy p95 Duration" &&
+    printf '%s' "$response" | grep -Fq "Host CPU Usage Percent" &&
+    printf '%s' "$response" | grep -Fq "Hikari Active Connections"; do
+    if (( SECONDS >= deadline )); then
+      echo "Grafana dev dashboard did not load expected phase 1 panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
 wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-dev-app"}) > 0' 'reading-garden-dev-app'
@@ -76,6 +94,7 @@ assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'
 assert_prometheus_query_has_result 'up{job="blackbox-http"} == 1' 'blackbox-http'
 
 wait_for_grafana_datasource
+wait_for_grafana_dashboard_panels
 
 curl -fsS "${DEV_BASE_URL}/api/health" | grep -Fq '"UP"'
 curl -fsS "${DEV_BASE_URL}/v3/api-docs" >/dev/null

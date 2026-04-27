@@ -69,6 +69,10 @@ grep -Fq '/api/datasources/uid/prometheus/health' deploy/monitoring/scripts/veri
 grep -Fq 'VERIFY_TIMEOUT_SECONDS' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_datasource' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'wait_for_grafana_dashboard_panels' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Dev Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
 if rg -n 'reading-garden-prod-app|PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "phase 1 verification must not require prod app metrics or prod live docs" >&2
     exit 1
