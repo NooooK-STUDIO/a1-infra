@@ -26,10 +26,82 @@
         "uid": "loki"
       },
       "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 7,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{container=~\"reading-garden-prod-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Prod Recent Error Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{container=~\"reading-garden-dev-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Dev Recent Error Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 8
       },
       "id": 1,
       "options": {
@@ -65,7 +137,7 @@
         "h": 12,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 20
       },
       "id": 2,
       "options": {
@@ -101,7 +173,7 @@
         "h": 12,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 20
       },
       "id": 3,
       "options": {
@@ -137,7 +209,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 32
       },
       "id": 4,
       "options": {
@@ -173,7 +245,7 @@
         "h": 12,
         "w": 12,
         "x": 0,
-        "y": 36
+        "y": 44
       },
       "id": 5,
       "options": {
@@ -209,7 +281,7 @@
         "h": 12,
         "w": 12,
         "x": 12,
-        "y": 36
+        "y": 44
       },
       "id": 6,
       "options": {
@@ -255,5 +327,5 @@
   "timezone": "browser",
   "title": "ReadingGarden Logs",
   "uid": "reading-garden-logs",
-  "version": 2
+  "version": 3
 }

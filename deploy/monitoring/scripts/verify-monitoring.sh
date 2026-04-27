@@ -151,11 +151,17 @@ wait_for_grafana_dashboard_panels() {
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dev_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Dev Avg Latency" &&
+    printf '%s' "$response" | grep -Fq "Dev p95 Latency" &&
+    printf '%s' "$response" | grep -Fq "Dev Recent Error Logs" &&
+    printf '%s' "$response" | grep -Fq "Dev Active Alerts" &&
     printf '%s' "$response" | grep -Fq "Caddy p95 Duration" &&
     printf '%s' "$response" | grep -Fq "Host CPU Usage Percent" &&
     printf '%s' "$response" | grep -Fq "Hikari Active Connections" &&
     response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$prod_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Prod Avg Latency" &&
+    printf '%s' "$response" | grep -Fq "Prod p95 Latency" &&
+    printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
+    printf '%s' "$response" | grep -Fq "Prod Active Alerts" &&
     printf '%s' "$response" | grep -Fq "Prod 5xx Rate" &&
     printf '%s' "$response" | grep -Fq "Hikari Active Connections"; do
     if (( SECONDS >= deadline )); then
@@ -172,6 +178,8 @@ wait_for_grafana_logs_dashboard_panels() {
   local response
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
+    printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
+    printf '%s' "$response" | grep -Fq "Dev Recent Error Logs" &&
     printf '%s' "$response" | grep -Fq "App Container Logs" &&
     printf '%s' "$response" | grep -Fq "Prod App Logs" &&
     printf '%s' "$response" | grep -Fq "Dev App Logs" &&

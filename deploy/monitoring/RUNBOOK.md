@@ -80,12 +80,20 @@ Expected checks:
 
 Open Grafana through the SSH tunnel and use the `ReadingGarden Logs` dashboard.
 
+The dashboard starts with `Prod Recent Error Logs` and `Dev Recent Error Logs`.
+These panels use the same filter as the Discord log alerts, so they are the
+first place to check when `GrafanaProdAppErrorLogsDetected` or
+`GrafanaDevAppErrorLogsDetected` fires. The Discord payload includes a
+`logs_dashboard` annotation that opens this dashboard for the last 30 minutes.
+
 Useful Loki queries:
 
 ```logql
 {source="docker"}
 {container=~"reading-garden-prod-.*"}
 {container=~"reading-garden-dev-.*"}
+{container=~"reading-garden-prod-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)"
+{container=~"reading-garden-dev-.*"} |~ "(?i)(\\bERROR\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)"
 {container="reading-garden-prod-blue"}
 {container="reading-garden-prod-green"}
 {unit="caddy.service"}
@@ -109,6 +117,23 @@ cd /opt/infra/monitoring
 
 The script reads Prometheus `/api/v1/rules` and `/api/v1/alerts`, prints all expected Phase 1 alert rules, and exits non-zero when any expected rule is missing, unhealthy, pending, or firing.
 
+## Backup
+
+Provisioned dashboards, datasources, alert rules, contact points, and
+notification policies are stored in this repository. Grafana runtime state is
+stored in the host-local Docker volume mounted at `/var/lib/grafana` and can
+contain encrypted secrets, UI preferences, and local state. Keep backups on the
+host and do not commit them.
+
+```bash
+cd /opt/infra/monitoring
+./scripts/backup-grafana-state.sh
+```
+
+By default this writes a mode `600` archive under
+`/opt/infra/monitoring/backups`. Override `BACKUP_DIR` only with another
+host-local, non-public path.
+
 ## Rollback
 
 This stops only the monitoring stack:
@@ -130,6 +155,15 @@ Grafana provisions:
 - Notification policy routes `env=dev` alerts to the dev Discord webhook and `env=prod` alerts to the prod Discord webhook.
 - Host/common alerts use the default `nooook-discord` contact point.
 - Grafana-managed alert rules for dev/prod external health, dev/prod app metrics, dev/prod app error logs, Caddy metrics, and host disk usage.
+
+Prod alert thresholds are intentionally more sensitive than dev for user-facing
+signals:
+
+- `Prod5xxRateHigh`: any 5xx rate for 1 minute.
+- `ProdAvgLatencyHigh`: average HTTP latency above 750 ms for 5 minutes.
+- `ProdHikariPendingConnections`: pending DB pool connections for 2 minutes.
+- `GrafanaProdAppErrorLogsDetected`: matching app error logs for 1 minute.
+- `GrafanaDevAppErrorLogsDetected`: matching app error logs for 2 minutes.
 
 ## postgres_exporter Later
 

@@ -27,7 +27,7 @@ groups:
 
       - alert: Prod5xxRateHigh
         expr: sum(rate(http_server_requests_seconds_count{job="reading-garden-prod-app",status=~"5.."}[5m])) > 0
-        for: 5m
+        for: 1m
         labels:
           severity: warning
           env: prod
@@ -38,20 +38,20 @@ groups:
           runbook: Check prod application logs, recent deployments, and upstream error responses.
 
       - alert: ProdAvgLatencyHigh
-        expr: sum(rate(http_server_requests_seconds_sum{job="reading-garden-prod-app"}[5m])) / sum(rate(http_server_requests_seconds_count{job="reading-garden-prod-app"}[5m])) > 1
-        for: 10m
+        expr: sum(rate(http_server_requests_seconds_sum{job="reading-garden-prod-app"}[5m])) / sum(rate(http_server_requests_seconds_count{job="reading-garden-prod-app"}[5m])) > 0.75
+        for: 5m
         labels:
           severity: warning
           env: prod
           service: reading-garden-kotlin
           component: app
         annotations:
-          summary: ReadingGarden prod average HTTP latency is above 1 second
+          summary: ReadingGarden prod average HTTP latency is above 750 ms
           runbook: Check slow endpoints, database latency, and current prod traffic.
 
       - alert: ProdHikariPendingConnections
         expr: sum(hikaricp_connections_pending{job="reading-garden-prod-app"}) > 0
-        for: 5m
+        for: 2m
         labels:
           severity: warning
           env: prod
