@@ -186,6 +186,57 @@ wait_for_grafana_logs_dashboard_panels() {
   done
 }
 
+wait_for_grafana_alerting() {
+  local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
+  local contact_points_url="${GRAFANA_URL}/api/v1/provisioning/contact-points"
+  local policies_url="${GRAFANA_URL}/api/v1/provisioning/policies"
+  local alert_rule_uids=(
+    grafana-dev-external-health
+    grafana-prod-external-health
+    grafana-dev-app-metrics
+    grafana-prod-app-metrics
+    grafana-caddy-metrics
+    grafana-host-disk-full
+  )
+  local response
+  local rule_uid
+  local all_rules_loaded
+
+  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$contact_points_url")" &&
+    printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord"' &&
+    printf '%s' "$response" | grep -Fq '"type":"discord"' &&
+    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
+    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord"'; do
+    if (( SECONDS >= deadline )); then
+      echo "Grafana Discord alerting contact point or notification policy did not load within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+
+  while true; do
+    all_rules_loaded=true
+    for rule_uid in "${alert_rule_uids[@]}"; do
+      if ! response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+        "${GRAFANA_URL}/api/v1/provisioning/alert-rules/${rule_uid}")" ||
+        ! printf '%s' "$response" | grep -Fq '"ruleGroup":"reading-garden-alerts"'; then
+        all_rules_loaded=false
+        break
+      fi
+    done
+
+    if [ "$all_rules_loaded" = true ]; then
+      return 0
+    fi
+
+    if (( SECONDS >= deadline )); then
+      echo "Grafana did not load the expected ReadingGarden alert rules within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
 wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"
 wait_for_http "${LOKI_URL}/ready" "Loki readiness"
 wait_for_prometheus_rules
@@ -203,6 +254,7 @@ wait_for_grafana_datasource
 wait_for_grafana_loki_datasource
 wait_for_grafana_dashboard_panels
 wait_for_grafana_logs_dashboard_panels
+wait_for_grafana_alerting
 
 curl -fsS "${DEV_BASE_URL}/api/health" | grep -Fq '"UP"'
 curl -fsS "${DEV_BASE_URL}/v3/api-docs" >/dev/null

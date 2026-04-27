@@ -3,6 +3,7 @@ set -euo pipefail
 
 CONFIG_OUTPUT="$(
   GRAFANA_ADMIN_PASSWORD=secret-admin \
+  GRAFANA_DISCORD_WEBHOOK_URL=https://example.invalid/discord-webhook \
   docker compose -f deploy/monitoring/docker-compose.monitoring.yml config
 )"
 
@@ -114,6 +115,7 @@ printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/run/log/journal'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/log/caddy'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'network_mode: host'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_HTTP_ADDR: 127.0.0.1'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_WEBHOOK_URL: https://example.invalid/discord-webhook'
 
 assert_no_published_ports prometheus
 assert_no_published_ports grafana
@@ -123,8 +125,8 @@ assert_localhost_port node-exporter 9100 9100
 assert_localhost_port cadvisor 18082 8080
 assert_localhost_port blackbox-exporter 9115 9115
 
-if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|postgres-exporter:|DISCORD_WEBHOOK_URL'; then
-    echo "deferred services and Discord config must not be present in phase 1" >&2
+if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|postgres-exporter:|discord(app)?\.com/api/webhooks/[0-9]+'; then
+    echo "deferred services and real Discord webhook URLs must not be present" >&2
     exit 1
 fi
 

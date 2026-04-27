@@ -45,6 +45,7 @@ cd /opt/infra/monitoring
 GRAFANA_HOST_PORT=3000
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=<host-local-password>
+GRAFANA_DISCORD_WEBHOOK_URL=<host-local-discord-webhook-url>
 ```
 
 ## Verify
@@ -62,6 +63,7 @@ Expected checks:
 - The dev app scrape uses localhost management ports `19090` and `19091`.
 - The prod app scrape uses localhost management ports `19080` and `19081`; at least one blue/green target must be up.
 - Grafana Prometheus and Loki datasources are healthy.
+- Grafana Alerting has the Discord contact point, notification policy, and provisioned ReadingGarden alert rules.
 - Grafana includes `ReadingGarden Dev Overview`, `ReadingGarden Prod Overview`, and `ReadingGarden Logs`.
 - dev `/api/health` and `/v3/api-docs` respond.
 
@@ -108,9 +110,15 @@ docker compose -f /opt/infra/monitoring/docker-compose.yml down
 
 Do not delete monitoring volumes unless explicitly approved.
 
-## Discord Later
+## Discord Alerts
 
-Add Grafana Alerting and a Discord contact point in a separate change after the webhook exists. Keep the webhook URL only in `/opt/infra/monitoring/.env`.
+Discord alert delivery uses Grafana Alerting. Keep the webhook URL only in `/opt/infra/monitoring/.env` as `GRAFANA_DISCORD_WEBHOOK_URL`; never commit the real URL.
+
+Grafana provisions:
+
+- `reading-garden-discord` contact point.
+- Root notification policy that sends ReadingGarden alerts to Discord.
+- Grafana-managed alert rules for dev/prod external health, dev/prod app metrics, Caddy metrics, and host disk usage.
 
 ## postgres_exporter Later
 

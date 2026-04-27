@@ -66,6 +66,7 @@ jobs:
             docker compose -f deploy/docker-compose.postgres-shared.yml config >/dev/null
 
           GRAFANA_ADMIN_PASSWORD=ci-secret \
+          GRAFANA_DISCORD_WEBHOOK_URL=https://example.invalid/discord-webhook \
             docker compose -f deploy/monitoring/docker-compose.monitoring.yml config >/dev/null
 
       - name: Check Prometheus config and rules

@@ -10,6 +10,9 @@ test -f deploy/monitoring/alloy/config.alloy
 test -f deploy/monitoring/SECURITY.md
 test -f deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 test -f deploy/monitoring/grafana/provisioning/dashboards/dashboards.yml
+test -f deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+test -f deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
+test -f deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 test -f deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 test -f deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 test -f deploy/monitoring/grafana/dashboards/reading-garden-logs.json
@@ -36,6 +39,7 @@ grep -Fq 'grafana/loki' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/loki:3.5.2' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/alloy' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_METRICS_ENABLED: "true"' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'GRAFANA_DISCORD_WEBHOOK_URL: ${GRAFANA_DISCORD_WEBHOOK_URL:?GRAFANA_DISCORD_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'network_mode: host' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq -- '--web.listen-address=127.0.0.1:9090' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_SERVER_HTTP_ADDR: 127.0.0.1' deploy/monitoring/docker-compose.monitoring.yml
@@ -114,7 +118,18 @@ grep -Fq 'ProdExternalHealthDown' deploy/monitoring/prometheus/rules/reading-gar
 grep -Fq 'Prod5xxRateHigh' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'ProdAvgLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'ProdHikariPendingConnections' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+grep -Fq 'type: discord' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'url: $GRAFANA_DISCORD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'receiver: reading-garden-discord' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
+grep -Fq 'GrafanaDevExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaProdExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaDevAppMetricsDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaProdAppMetricsDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaCaddyMetricsDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaHostDiskAlmostFull' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GRAFANA_DISCORD_WEBHOOK_URL=' deploy/monitoring/.env.example
 grep -Fq 'docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate' deploy/monitoring/scripts/bootstrap-monitoring.sh
+grep -Fq 'GRAFANA_DISCORD_WEBHOOK_URL' deploy/monitoring/scripts/bootstrap-monitoring.sh
 grep -Fq '/api/datasources/uid/prometheus/health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'VERIFY_TIMEOUT_SECONDS' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"' deploy/monitoring/scripts/verify-monitoring.sh
@@ -130,6 +145,10 @@ grep -Fq 'CaddyRequestLatencyHigh' deploy/monitoring/scripts/verify-monitoring.s
 grep -Fq 'CaddyReloadFailed' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_datasource' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_dashboard_panels' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'wait_for_grafana_alerting' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/v1/provisioning/contact-points' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/v1/provisioning/alert-rules/${rule_uid}' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'grafana-dev-external-health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-prod-overview' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/datasources/uid/loki/health' deploy/monitoring/scripts/verify-monitoring.sh
@@ -166,8 +185,13 @@ grep -Fq '{container=~"reading-garden-prod-.*"}' deploy/monitoring/RUNBOOK.md
 grep -Fq 'self-log loops' deploy/monitoring/RUNBOOK.md
 grep -Fq 'Alertmanager Later' deploy/monitoring/RUNBOOK.md
 
-if rg -n 'discord(app)?\.com/api/webhooks/[0-9]+|DISCORD_WEBHOOK_URL|type: discord|alertmanager|postgres-exporter:' deploy/monitoring; then
-    echo "deferred secrets or services must not be committed in phase 1" >&2
+if rg -n 'discord(app)?\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]+' deploy/monitoring; then
+    echo "Discord webhook URLs must not be committed" >&2
+    exit 1
+fi
+
+if rg -n 'alertmanager|postgres-exporter:' deploy/monitoring; then
+    echo "deferred services must not be committed in this phase" >&2
     exit 1
 fi
 

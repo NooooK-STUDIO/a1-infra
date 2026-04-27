@@ -12,10 +12,11 @@ test -f "$ENV_FILE"
 
 required_keys=(
   GRAFANA_ADMIN_PASSWORD
+  GRAFANA_DISCORD_WEBHOOK_URL
 )
 
 for key in "${required_keys[@]}"; do
-  if ! grep -Eq "^${key}=" "$ENV_FILE"; then
+  if ! grep -Eq "^${key}=.+" "$ENV_FILE"; then
     echo "Missing required key in ${ENV_FILE}: ${key}" >&2
     exit 1
   fi
