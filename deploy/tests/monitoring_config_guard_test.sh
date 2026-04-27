@@ -32,6 +32,17 @@ grep -Fq -- '--web.listen-address=127.0.0.1:9090' deploy/monitoring/docker-compo
 grep -Fq 'GF_SERVER_HTTP_ADDR: 127.0.0.1' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'uid: prometheus' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 grep -Fq 'reading-garden-dev-overview' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Dev Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Dev Max Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Dev 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Hikari Active Connections' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Process Uptime' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Caddy Request Rate' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Caddy p95 Duration' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Host CPU Usage Percent' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'Host Load 1m' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'jvm_threads_live_threads{job=\"reading-garden-dev-app\"}' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq 'caddy_config_last_reload_successful{job=\"caddy\"}' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq '127.0.0.1:19090' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:19091' deploy/monitoring/prometheus/prometheus.yml
 if rg -n 'reading-garden-prod-app|127\.0\.0\.1:1908[01]' deploy/monitoring/prometheus deploy/monitoring/grafana; then
