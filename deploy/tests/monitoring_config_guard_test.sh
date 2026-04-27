@@ -124,6 +124,12 @@ grep -Fq 'ProdHikariPendingConnections' deploy/monitoring/prometheus/rules/readi
 grep -Fq 'type: discord' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'name: nooook-discord' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'url: $NOOOOK_DISCORD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'deleteContactPoints:' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'uid: reading-garden-discord' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+if rg -n --pcre2 'name: reading-garden-discord(?!-(dev|prod))|GRAFANA_DISCORD_WEBHOOK_URL' deploy/monitoring .github; then
+    echo "old host/common ReadingGarden Discord receiver and env key must not remain" >&2
+    exit 1
+fi
 grep -Fq 'url: $GRAFANA_DISCORD_DEV_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'url: $GRAFANA_DISCORD_PROD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'receiver: reading-garden-discord-dev' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml

@@ -1,5 +1,9 @@
 apiVersion: 1
 
+deleteContactPoints:
+  - orgId: 1
+    uid: reading-garden-discord
+
 contactPoints:
   - orgId: 1
     name: nooook-discord
