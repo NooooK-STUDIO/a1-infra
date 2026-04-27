@@ -61,6 +61,8 @@ fi
 grep -Fq 'matches       = "SYSLOG_IDENTIFIER=caddy"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'path          = "/var/log/journal"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'retention_period: 72h' deploy/monitoring/loki/loki.yml
+grep -Fq 'allow_structured_metadata: false' deploy/monitoring/loki/loki.yml
+grep -Fq '"from": "now-6h"' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq 'Dev Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'Dev Max Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'Dev 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
