@@ -46,6 +46,11 @@ grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-gard
 grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '{source=\"docker\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq 'loki.source.docker "containers"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'loki.source.journal "caddy"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'matches       = "SYSLOG_IDENTIFIER=caddy"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'path          = "/var/log/journal"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'retention_period: 72h' deploy/monitoring/loki/loki.yml
 grep -Fq 'Dev Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'Dev Max Latency' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq 'Dev 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
@@ -100,6 +105,7 @@ grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scr
 grep -Fq '/api/datasources/uid/loki/health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/loki/api/v1/query_range' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '"result":[{' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Dev Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Docker Container Logs' deploy/monitoring/scripts/verify-monitoring.sh

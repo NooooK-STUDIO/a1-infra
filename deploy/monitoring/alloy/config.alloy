@@ -62,7 +62,8 @@ loki.relabel "journal" {
 }
 
 loki.source.journal "caddy" {
-  matches       = "_SYSTEMD_UNIT=caddy.service"
+  matches       = "SYSLOG_IDENTIFIER=caddy"
+  path          = "/var/log/journal"
   max_age       = "2h"
   relabel_rules = loki.relabel.journal.rules
   labels        = {

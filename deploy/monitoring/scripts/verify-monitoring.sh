@@ -77,7 +77,7 @@ assert_loki_query_has_result() {
   until curl -fsS -G \
     --data-urlencode "query=${query}" \
     --data-urlencode "limit=1" \
-    "${LOKI_URL}/loki/api/v1/query_range" | grep -Fq '"streams":[{'; do
+    "${LOKI_URL}/loki/api/v1/query_range" | grep -Fq '"result":[{'; do
     if (( SECONDS >= deadline )); then
       echo "Loki query returned no log streams within ${VERIFY_TIMEOUT_SECONDS}s for ${label}: ${query}" >&2
       exit 1
