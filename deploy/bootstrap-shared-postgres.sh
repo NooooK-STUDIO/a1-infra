@@ -70,7 +70,7 @@ until docker inspect --format='{{.State.Health.Status}}' "$POSTGRES_CONTAINER_NA
 done
 
 if [[ -n "${POSTGRES_EXPORTER_PASSWORD:-}" ]]; then
-    docker exec \
+    docker exec -i \
         -e POSTGRES_EXPORTER_PASSWORD="$POSTGRES_EXPORTER_PASSWORD" \
         "$POSTGRES_CONTAINER_NAME" \
         psql -v ON_ERROR_STOP=1 -v postgres_exporter_password="$POSTGRES_EXPORTER_PASSWORD" --username "$POSTGRES_SUPERUSER" --dbname postgres <<'SQL'
