@@ -33,6 +33,7 @@ fi
 grep -Fq 'gcr.io/cadvisor/cadvisor:v0.52.1' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'prom/blackbox-exporter' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/loki' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'grafana/loki:3.5.2' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/alloy' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_METRICS_ENABLED: "true"' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'network_mode: host' deploy/monitoring/docker-compose.monitoring.yml

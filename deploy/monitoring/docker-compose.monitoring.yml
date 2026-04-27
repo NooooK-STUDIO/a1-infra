@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
 
   loki:
-    image: grafana/loki:3.5.0
+    image: grafana/loki:3.5.2
     container_name: a1-monitoring-loki
     command:
       - -config.file=/etc/loki/loki.yml

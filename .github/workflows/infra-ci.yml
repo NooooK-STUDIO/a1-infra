@@ -90,7 +90,7 @@ jobs:
 
           docker run --rm \
             -v "$PWD/deploy/monitoring/loki:/etc/loki:ro" \
-            grafana/loki:3.5.0 \
+            grafana/loki:3.5.2 \
             -config.file=/etc/loki/loki.yml \
             -verify-config
 
