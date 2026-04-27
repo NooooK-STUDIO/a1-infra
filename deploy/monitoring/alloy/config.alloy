@@ -76,6 +76,32 @@ loki.relabel "journal" {
   }
 }
 
+local.file_match "caddy_access" {
+  path_targets = [
+    {
+      __address__ = "localhost",
+      __path__ = "/var/log/caddy/reading-garden-prod-access.log",
+      env = "prod",
+      host = "oracle-a1",
+      service = "caddy",
+      source = "caddy_access",
+    },
+    {
+      __address__ = "localhost",
+      __path__ = "/var/log/caddy/reading-garden-dev-access.log",
+      env = "dev",
+      host = "oracle-a1",
+      service = "caddy",
+      source = "caddy_access",
+    },
+  ]
+}
+
+loki.source.file "caddy_access" {
+  targets    = local.file_match.caddy_access.targets
+  forward_to = [loki.write.local.receiver]
+}
+
 loki.source.journal "caddy" {
   matches       = "SYSLOG_IDENTIFIER=caddy"
   path          = "/var/log/journal"

@@ -1,4 +1,13 @@
 readinggarden-dev.duckdns.org {
+    log reading_garden_dev {
+        output file /var/log/caddy/reading-garden-dev-access.log {
+            roll_size 10MiB
+            roll_keep 5
+            roll_keep_for 72h
+        }
+        format json
+    }
+
     import common_proxy
     import /etc/caddy/upstreams/reading-garden-dev.caddy
 }

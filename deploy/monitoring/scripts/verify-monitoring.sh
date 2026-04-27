@@ -175,7 +175,9 @@ wait_for_grafana_logs_dashboard_panels() {
     printf '%s' "$response" | grep -Fq "App Container Logs" &&
     printf '%s' "$response" | grep -Fq "Prod App Logs" &&
     printf '%s' "$response" | grep -Fq "Dev App Logs" &&
-    printf '%s' "$response" | grep -Fq "Caddy Systemd Logs"; do
+    printf '%s' "$response" | grep -Fq "Caddy Systemd Logs" &&
+    printf '%s' "$response" | grep -Fq "Prod Caddy Access Logs" &&
+    printf '%s' "$response" | grep -Fq "Dev Caddy Access Logs"; do
     if (( SECONDS >= deadline )); then
       echo "Grafana logs dashboard did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1

@@ -78,11 +78,14 @@ Useful Loki queries:
 {container="reading-garden-prod-blue"}
 {container="reading-garden-prod-green"}
 {unit="caddy.service"}
+{source="caddy_access",env="prod"}
+{source="caddy_access",env="dev"}
 {container="reading-garden-dev-blue"}
 {container="reading-garden-dev-green"}
 ```
 
 ReadingGarden app container logs are collected through the Docker socket. Monitoring containers and shared PostgreSQL are intentionally excluded to avoid self-log loops and noisy database history. Host Caddy logs are collected from the systemd journal and labeled with `unit="caddy.service"`.
+Caddy access logs are written per public environment to `/var/log/caddy/reading-garden-prod-access.log` and `/var/log/caddy/reading-garden-dev-access.log`, then collected by Alloy with `source="caddy_access"` and `env="prod"` or `env="dev"`.
 
 ## Alert Status
 

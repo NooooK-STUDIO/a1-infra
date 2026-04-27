@@ -50,7 +50,13 @@ grep -Fq '{source=\"docker\"}' deploy/monitoring/grafana/dashboards/reading-gard
 grep -Fq '{container=~\"reading-garden-prod-.*\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '{container=~\"reading-garden-dev-.*\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq '{source=\"caddy_access\",env=\"prod\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq '{source=\"caddy_access\",env=\"dev\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
 grep -Fq 'loki.source.docker "containers"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'local.file_match "caddy_access"' deploy/monitoring/alloy/config.alloy
+grep -Fq 'loki.source.file "caddy_access"' deploy/monitoring/alloy/config.alloy
+grep -Fq '__path__ = "/var/log/caddy/reading-garden-prod-access.log"' deploy/monitoring/alloy/config.alloy
+grep -Fq '__path__ = "/var/log/caddy/reading-garden-dev-access.log"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'loki.source.journal "caddy"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'action        = "keep"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'regex         = "/reading-garden-(prod|dev)-.*"' deploy/monitoring/alloy/config.alloy
@@ -141,6 +147,8 @@ grep -Fq 'App Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod App Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Dev App Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy Systemd Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Prod Caddy Access Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Dev Caddy Access Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/v1/alerts' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq '/api/v1/rules' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'python3' deploy/monitoring/scripts/check-alerts.sh

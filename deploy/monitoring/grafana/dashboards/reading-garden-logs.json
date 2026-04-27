@@ -163,6 +163,78 @@
       ],
       "title": "Caddy Systemd Logs",
       "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      },
+      "id": 5,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{source=\"caddy_access\",env=\"prod\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Prod Caddy Access Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 36
+      },
+      "id": 6,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{source=\"caddy_access\",env=\"dev\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Dev Caddy Access Logs",
+      "type": "logs"
     }
   ],
   "preload": false,
@@ -183,5 +255,5 @@
   "timezone": "browser",
   "title": "ReadingGarden Logs",
   "uid": "reading-garden-logs",
-  "version": 1
+  "version": 2
 }

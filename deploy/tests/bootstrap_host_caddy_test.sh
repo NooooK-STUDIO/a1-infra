@@ -12,6 +12,7 @@ mkdir -p \
     "${TMP_DIR}/stage/systemd/caddy.service.d" \
     "${TMP_DIR}/bin" \
     "${TMP_DIR}/config" \
+    "${TMP_DIR}/logs" \
     "${TMP_DIR}/state-data" \
     "${TMP_DIR}/state-config" \
     "${TMP_DIR}/docker-data" \
@@ -53,6 +54,7 @@ PATH="${TMP_DIR}/bin:$PATH" \
 HOST_CADDY_REQUIRE_ROOT=false \
 HOST_CADDY_STAGE_DIR="${TMP_DIR}/stage" \
 HOST_CADDY_CONFIG_DIR="${TMP_DIR}/config" \
+HOST_CADDY_LOG_DIR="${TMP_DIR}/logs" \
 HOST_CADDY_SYSTEMD_OVERRIDE_DIR="${TMP_DIR}/systemd/caddy.service.d" \
 HOST_CADDY_IMPORT_DOCKER_STATE=true \
 HOST_CADDY_STATE_OWNER="" \
@@ -65,6 +67,7 @@ HOST_CADDY_STATE_CONFIG_DIR="${TMP_DIR}/state-config" \
 grep -Fq 'admin unix//var/lib/caddy/caddy-admin.sock' "${TMP_DIR}/config/Caddyfile"
 test -f "${TMP_DIR}/config/common/proxy_common.caddy"
 test -f "${TMP_DIR}/config/sites/example.caddy"
+test -d "${TMP_DIR}/logs"
 test -f "${TMP_DIR}/systemd/caddy.service.d/override.conf"
 grep -Fq 'certdata' "${TMP_DIR}/state-data/test.txt"
 grep -Fq 'configdata' "${TMP_DIR}/state-config/test.txt"

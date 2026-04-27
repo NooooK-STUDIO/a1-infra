@@ -111,6 +111,7 @@ printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/etc/alloy/config.alloy'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/run/docker.sock'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/log/journal'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/run/log/journal'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/log/caddy'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'network_mode: host'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_HTTP_ADDR: 127.0.0.1'
 

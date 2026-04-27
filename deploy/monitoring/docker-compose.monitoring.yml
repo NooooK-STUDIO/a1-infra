@@ -60,6 +60,7 @@ services:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - alloy-data:/var/lib/alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/caddy:/var/log/caddy:ro
       - /var/log/journal:/var/log/journal:ro
       - /run/log/journal:/run/log/journal:ro
     restart: unless-stopped

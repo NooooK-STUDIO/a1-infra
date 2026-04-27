@@ -4,6 +4,7 @@ set -euo pipefail
 HOST_CADDY_REQUIRE_ROOT="${HOST_CADDY_REQUIRE_ROOT:-true}"
 HOST_CADDY_STAGE_DIR="${HOST_CADDY_STAGE_DIR:-/tmp/reading-garden-host-caddy}"
 HOST_CADDY_CONFIG_DIR="${HOST_CADDY_CONFIG_DIR:-/etc/caddy}"
+HOST_CADDY_LOG_DIR="${HOST_CADDY_LOG_DIR:-/var/log/caddy}"
 HOST_CADDY_SYSTEMD_OVERRIDE_DIR="${HOST_CADDY_SYSTEMD_OVERRIDE_DIR:-/etc/systemd/system/caddy.service.d}"
 HOST_CADDY_SYSTEMD_OVERRIDE_SOURCE="${HOST_CADDY_SYSTEMD_OVERRIDE_SOURCE:-${HOST_CADDY_STAGE_DIR}/systemd/caddy.service.d/override.conf}"
 HOST_CADDY_IMPORT_DOCKER_STATE="${HOST_CADDY_IMPORT_DOCKER_STATE:-false}"
@@ -33,6 +34,11 @@ install -d -m 755 \
     "${HOST_CADDY_CONFIG_DIR}/common" \
     "${HOST_CADDY_CONFIG_DIR}/sites" \
     "${HOST_CADDY_CONFIG_DIR}/upstreams"
+
+install -d -m 755 "${HOST_CADDY_LOG_DIR}"
+if id caddy >/dev/null 2>&1; then
+    chown caddy:caddy "${HOST_CADDY_LOG_DIR}"
+fi
 
 install -m 644 "${HOST_CADDY_STAGE_DIR}/Caddyfile" "${HOST_CADDY_CONFIG_DIR}/Caddyfile"
 
