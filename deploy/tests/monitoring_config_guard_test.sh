@@ -12,6 +12,7 @@ test -f deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 test ! -f deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 test -x deploy/monitoring/scripts/bootstrap-monitoring.sh
 test -x deploy/monitoring/scripts/verify-monitoring.sh
+test -x deploy/monitoring/scripts/check-alerts.sh
 test -f deploy/monitoring/RUNBOOK.md
 
 grep -Fq 'retention.time=7d' deploy/monitoring/docker-compose.monitoring.yml
@@ -85,6 +86,12 @@ grep -Fq 'wait_for_grafana_dashboard_panels' deploy/monitoring/scripts/verify-mo
 grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Dev Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/v1/alerts' deploy/monitoring/scripts/check-alerts.sh
+grep -Fq '/api/v1/rules' deploy/monitoring/scripts/check-alerts.sh
+grep -Fq 'python3' deploy/monitoring/scripts/check-alerts.sh
+grep -Fq 'Active alerts' deploy/monitoring/scripts/check-alerts.sh
+grep -Fq 'Expected alert rules' deploy/monitoring/scripts/check-alerts.sh
+grep -Fq './scripts/check-alerts.sh' deploy/monitoring/RUNBOOK.md
 if rg -n 'reading-garden-prod-app|PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "phase 1 verification must not require prod app metrics or prod live docs" >&2
     exit 1

@@ -62,6 +62,17 @@ Expected checks:
 - Grafana Prometheus datasource is healthy.
 - dev `/api/health` and `/v3/api-docs` respond.
 
+## Alert Status
+
+Use this while tuning thresholds before adding notifications:
+
+```bash
+cd /opt/infra/monitoring
+./scripts/check-alerts.sh
+```
+
+The script reads Prometheus `/api/v1/rules` and `/api/v1/alerts`, prints all expected Phase 1 alert rules, and exits non-zero when any expected rule is missing, unhealthy, pending, or firing.
+
 ## Rollback
 
 This stops only the monitoring stack:
