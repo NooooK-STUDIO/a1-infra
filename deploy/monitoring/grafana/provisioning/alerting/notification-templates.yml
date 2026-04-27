@@ -1,0 +1,18 @@
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: reading-garden-discord-template
+    template: |
+      {{ define "reading_garden_discord.title" -}}
+      [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ len .Alerts.Firing }}{{ end }}] {{ index .CommonLabels "env" }} {{ index .CommonLabels "alertname" }}
+      {{- end }}
+
+      {{ define "reading_garden_discord.message" -}}
+      {{ range .Alerts -}}
+      **{{ index .Labels "alertname" }}** `{{ index .Labels "env" }}` `{{ index .Labels "severity" }}`
+      {{ with index .Annotations "summary" }}{{ . }}{{ end }}
+      {{ with index .Annotations "logs_dashboard" }}Logs: {{ . }}{{ end }}
+      {{ with index .Annotations "runbook_url" }}Runbook: {{ . }}{{ end }}
+      {{ end -}}
+      {{- end }}

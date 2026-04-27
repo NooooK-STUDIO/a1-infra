@@ -55,6 +55,7 @@ GRAFANA_ROOT_URL=https://nooook-monitoring.duckdns.org
 NOOOOK_DISCORD_WEBHOOK_URL=<host-local-discord-webhook-url>
 GRAFANA_DISCORD_DEV_WEBHOOK_URL=<host-local-dev-discord-webhook-url>
 GRAFANA_DISCORD_PROD_WEBHOOK_URL=<host-local-prod-discord-webhook-url>
+POSTGRES_EXPORTER_PASSWORD=<host-local-postgres-exporter-password>
 ```
 
 ## Verify
@@ -67,13 +68,13 @@ cd /opt/infra/monitoring
 Expected checks:
 
 - Prometheus readiness succeeds.
-- Prometheus active targets include `reading-garden-dev-app`, `reading-garden-prod-app`, `caddy`, `node-exporter`, `cadvisor`, and `blackbox-http`.
+- Prometheus active targets include `reading-garden-dev-app`, `reading-garden-prod-app`, `caddy`, `node-exporter`, `cadvisor`, `postgres-exporter`, and `blackbox-http`.
 - Loki is ready and has Docker container logs plus Caddy systemd logs.
 - The dev app scrape uses localhost management ports `19090` and `19091`.
 - The prod app scrape uses localhost management ports `19080` and `19081`; at least one blue/green target must be up.
 - Grafana Prometheus and Loki datasources are healthy.
 - Grafana Alerting has the Discord contact point, notification policy, and provisioned ReadingGarden alert rules.
-- Grafana includes `ReadingGarden Dev Overview`, `ReadingGarden Prod Overview`, and `ReadingGarden Logs`.
+- Grafana includes `ReadingGarden Dev Overview`, `ReadingGarden Prod Overview`, `ReadingGarden Postgres Overview`, and `ReadingGarden Logs`.
 - dev `/api/health` and `/v3/api-docs` respond.
 
 ## Logs
@@ -152,9 +153,10 @@ Grafana provisions:
 
 - `nooook-discord` contact point.
 - `reading-garden-discord-dev` and `reading-garden-discord-prod` contact points.
+- `reading-garden-discord` notification template group for concise Discord messages.
 - Notification policy routes `env=dev` alerts to the dev Discord webhook and `env=prod` alerts to the prod Discord webhook.
 - Host/common alerts use the default `nooook-discord` contact point.
-- Grafana-managed alert rules for dev/prod external health, dev/prod app metrics, dev/prod app error logs, Caddy metrics, and host disk usage.
+- Grafana-managed alert rules for dev/prod external health, dev/prod app metrics, dev/prod app error logs, Caddy metrics, PostgreSQL metrics, and host disk usage.
 
 Prod alert thresholds are intentionally more sensitive than dev for user-facing
 signals:
@@ -165,9 +167,22 @@ signals:
 - `GrafanaProdAppErrorLogsDetected`: matching app error logs for 1 minute.
 - `GrafanaDevAppErrorLogsDetected`: matching app error logs for 2 minutes.
 
-## postgres_exporter Later
+## PostgreSQL Metrics
 
-Add postgres_exporter after creating a dedicated PostgreSQL monitoring role. Track `pg_up`, connections, locks, cache hit rate, database size, and baseline transaction/query metrics.
+PostgreSQL metrics use `postgres_exporter` on `127.0.0.1:9187`. The exporter
+connects to shared PostgreSQL through `host.docker.internal:15432/postgres` as the
+dedicated `reading_garden_monitoring` role.
+
+Keep the exporter password in both host-local places:
+
+- `/opt/infra/postgresql/secrets/postgres_exporter.password`
+- `/opt/infra/monitoring/.env` as `POSTGRES_EXPORTER_PASSWORD`
+
+`deploy/bootstrap-shared-postgres.sh` creates or updates the
+`reading_garden_monitoring` role and grants `pg_monitor` when
+`POSTGRES_EXPORTER_PASSWORD` is available. The `ReadingGarden Postgres Overview`
+dashboard tracks `pg_up`, connection usage, database size, deadlocks, and
+transaction rate.
 
 ## Alertmanager Later
 

@@ -27,6 +27,9 @@ EXPECTED_ALERT_RULES=(
   HostDiskAlmostFull
   HostMemoryHigh
   MonitoringTargetDown
+  PostgresExporterDown
+  PostgresConnectionsHigh
+  PostgresDeadlocksDetected
 )
 
 read_env_file() {
@@ -147,6 +150,7 @@ wait_for_grafana_dashboard_panels() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
   local dev_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-dev-overview"
   local prod_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-prod-overview"
+  local postgres_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-postgres-overview"
   local response
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dev_dashboard_url")" &&
@@ -163,7 +167,12 @@ wait_for_grafana_dashboard_panels() {
     printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
     printf '%s' "$response" | grep -Fq "Prod Active Alerts" &&
     printf '%s' "$response" | grep -Fq "Prod 5xx Rate" &&
-    printf '%s' "$response" | grep -Fq "Hikari Active Connections"; do
+    printf '%s' "$response" | grep -Fq "Hikari Active Connections" &&
+    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$postgres_dashboard_url")" &&
+    printf '%s' "$response" | grep -Fq "Postgres Exporter Up" &&
+    printf '%s' "$response" | grep -Fq "Postgres Connections Percent" &&
+    printf '%s' "$response" | grep -Fq "Database Size" &&
+    printf '%s' "$response" | grep -Fq "Deadlocks"; do
     if (( SECONDS >= deadline )); then
       echo "Grafana app dashboards did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1
@@ -217,6 +226,8 @@ wait_for_grafana_alerting() {
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-dev"' &&
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-prod"' &&
     printf '%s' "$response" | grep -Fq '"type":"discord"' &&
+    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "${GRAFANA_URL}/api/v1/provisioning/templates/reading-garden-discord-template")" &&
+    printf '%s' "$response" | grep -Fq 'reading_garden_discord.message' &&
     response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
     printf '%s' "$response" | grep -Fq '"receiver":"nooook-discord"' &&
     printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-dev"' &&
@@ -261,6 +272,8 @@ assert_prometheus_query_has_result 'probe_success{job="blackbox-http",instance="
 assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'
 assert_prometheus_query_has_result 'up{job="node-exporter"} == 1' 'node-exporter'
 assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'
+assert_prometheus_query_has_result 'up{job="postgres-exporter"} == 1' 'postgres-exporter'
+assert_prometheus_query_has_result 'pg_up{job="postgres-exporter"} == 1' 'postgres database'
 assert_prometheus_query_has_result 'up{job="blackbox-http"} == 1' 'blackbox-http'
 assert_loki_query_has_result '{unit="caddy.service"}' 'caddy systemd logs'
 

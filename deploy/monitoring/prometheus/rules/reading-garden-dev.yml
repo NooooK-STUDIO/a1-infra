@@ -144,3 +144,39 @@ groups:
         annotations:
           summary: A core monitoring scrape target is down
           runbook: Check the monitoring compose stack and Prometheus targets page.
+
+      - alert: PostgresExporterDown
+        expr: up{job="postgres-exporter"} == 0 or pg_up{job="postgres-exporter"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          env: infra
+          service: postgres
+          component: database
+        annotations:
+          summary: Shared PostgreSQL exporter or database scrape is down
+          runbook: Check a1-monitoring-postgres-exporter, shared-postgres, and the reading_garden_monitoring role.
+
+      - alert: PostgresConnectionsHigh
+        expr: sum(pg_stat_database_numbackends{job="postgres-exporter"}) / max(pg_settings_max_connections{job="postgres-exporter"}) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          env: infra
+          service: postgres
+          component: database
+        annotations:
+          summary: Shared PostgreSQL connections are above 80 percent of max_connections
+          runbook: Check active app connections, connection pool settings, and long-running sessions.
+
+      - alert: PostgresDeadlocksDetected
+        expr: increase(pg_stat_database_deadlocks{job="postgres-exporter"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          env: infra
+          service: postgres
+          component: database
+        annotations:
+          summary: Shared PostgreSQL deadlocks were detected
+          runbook: Inspect PostgreSQL logs and recent database write paths.
