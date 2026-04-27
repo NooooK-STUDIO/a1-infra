@@ -18,9 +18,10 @@ chmod 700 "$BACKUP_DIR"
 
 docker run --rm \
   --user 0:0 \
+  --entrypoint sh \
   --volumes-from "${GRAFANA_CONTAINER}:ro" \
   -v "${BACKUP_DIR}:/backup" \
   "$GRAFANA_IMAGE" \
-  sh -c "tar -czf '/backup/${backup_file}' -C /var/lib/grafana . && chmod 600 '/backup/${backup_file}'"
+  -c "tar -czf '/backup/${backup_file}' -C /var/lib/grafana . && chmod 600 '/backup/${backup_file}'"
 
 echo "${BACKUP_DIR}/${backup_file}"

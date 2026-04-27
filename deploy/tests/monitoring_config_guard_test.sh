@@ -193,6 +193,7 @@ grep -Fq 'wait_for_grafana_dashboard_panels' deploy/monitoring/scripts/verify-mo
 grep -Fq 'wait_for_grafana_alerting' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'GRAFANA_CONTAINER="${GRAFANA_CONTAINER:-a1-monitoring-grafana}"' deploy/monitoring/scripts/backup-grafana-state.sh
 grep -Fq 'BACKUP_DIR="${BACKUP_DIR:-/opt/infra/monitoring/backups}"' deploy/monitoring/scripts/backup-grafana-state.sh
+grep -Fq -- '--entrypoint sh' deploy/monitoring/scripts/backup-grafana-state.sh
 grep -Fq -- '--volumes-from "${GRAFANA_CONTAINER}:ro"' deploy/monitoring/scripts/backup-grafana-state.sh
 grep -Fq 'chmod 600' deploy/monitoring/scripts/backup-grafana-state.sh
 grep -Fq '/api/v1/provisioning/contact-points' deploy/monitoring/scripts/verify-monitoring.sh
