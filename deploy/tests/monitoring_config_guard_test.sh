@@ -14,6 +14,7 @@ test -f deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 test -f deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 test -f deploy/monitoring/grafana/provisioning/alerting/notification-templates.yml
 test -f deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 test -f deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 test -f deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 test -f deploy/monitoring/grafana/dashboards/reading-garden-logs.json
