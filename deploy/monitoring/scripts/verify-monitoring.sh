@@ -205,12 +205,12 @@ wait_for_grafana_alerting() {
   local all_rules_loaded
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$contact_points_url")" &&
-    printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord"' &&
+    printf '%s' "$response" | grep -Fq '"name":"nooook-discord"' &&
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-dev"' &&
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-prod"' &&
     printf '%s' "$response" | grep -Fq '"type":"discord"' &&
     response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
-    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord"' &&
+    printf '%s' "$response" | grep -Fq '"receiver":"nooook-discord"' &&
     printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-dev"' &&
     printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-prod"'; do
     if (( SECONDS >= deadline )); then

@@ -3,7 +3,7 @@ set -euo pipefail
 
 CONFIG_OUTPUT="$(
   GRAFANA_ADMIN_PASSWORD=secret-admin \
-  GRAFANA_DISCORD_WEBHOOK_URL=https://example.invalid/discord-webhook \
+  NOOOOK_DISCORD_WEBHOOK_URL=https://example.invalid/nooook-discord-webhook \
   GRAFANA_DISCORD_DEV_WEBHOOK_URL=https://example.invalid/dev-discord-webhook \
   GRAFANA_DISCORD_PROD_WEBHOOK_URL=https://example.invalid/prod-discord-webhook \
   docker compose -f deploy/monitoring/docker-compose.monitoring.yml config
@@ -118,7 +118,7 @@ printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/var/log/caddy'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'network_mode: host'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_HTTP_ADDR: 127.0.0.1'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_ROOT_URL: https://nooook-monitoring.duckdns.org'
-printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_WEBHOOK_URL: https://example.invalid/discord-webhook'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'NOOOOK_DISCORD_WEBHOOK_URL: https://example.invalid/nooook-discord-webhook'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_DEV_WEBHOOK_URL: https://example.invalid/dev-discord-webhook'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_PROD_WEBHOOK_URL: https://example.invalid/prod-discord-webhook'
 

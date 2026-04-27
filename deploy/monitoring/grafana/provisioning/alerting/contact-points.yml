@@ -2,13 +2,13 @@ apiVersion: 1
 
 contactPoints:
   - orgId: 1
-    name: reading-garden-discord
+    name: nooook-discord
     receivers:
-      - uid: reading-garden-discord
+      - uid: nooook-discord
         type: discord
         disableResolveMessage: false
         settings:
-          url: $GRAFANA_DISCORD_WEBHOOK_URL
+          url: $NOOOOK_DISCORD_WEBHOOK_URL
           use_discord_username: false
           title: '{{ template "default.title" . }}'
           message: '{{ template "default.message" . }}'

@@ -52,7 +52,7 @@ GRAFANA_HOST_PORT=3000
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=<host-local-password>
 GRAFANA_ROOT_URL=https://nooook-monitoring.duckdns.org
-GRAFANA_DISCORD_WEBHOOK_URL=<host-local-discord-webhook-url>
+NOOOOK_DISCORD_WEBHOOK_URL=<host-local-discord-webhook-url>
 GRAFANA_DISCORD_DEV_WEBHOOK_URL=<host-local-dev-discord-webhook-url>
 GRAFANA_DISCORD_PROD_WEBHOOK_URL=<host-local-prod-discord-webhook-url>
 ```
@@ -121,14 +121,14 @@ Do not delete monitoring volumes unless explicitly approved.
 
 ## Discord Alerts
 
-Discord alert delivery uses Grafana Alerting. Keep the webhook URL only in `/opt/infra/monitoring/.env` as `GRAFANA_DISCORD_WEBHOOK_URL`; never commit the real URL.
+Discord alert delivery uses Grafana Alerting. Keep the webhook URL only in `/opt/infra/monitoring/.env` as `NOOOOK_DISCORD_WEBHOOK_URL`; never commit the real URL.
 
 Grafana provisions:
 
-- `reading-garden-discord` contact point.
+- `nooook-discord` contact point.
 - `reading-garden-discord-dev` and `reading-garden-discord-prod` contact points.
 - Notification policy routes `env=dev` alerts to the dev Discord webhook and `env=prod` alerts to the prod Discord webhook.
-- Host/common alerts use the default `reading-garden-discord` contact point.
+- Host/common alerts use the default `nooook-discord` contact point.
 - Grafana-managed alert rules for dev/prod external health, dev/prod app metrics, dev/prod app error logs, Caddy metrics, and host disk usage.
 
 ## postgres_exporter Later

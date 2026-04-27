@@ -40,7 +40,7 @@ grep -Fq 'grafana/loki:3.5.2' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/alloy' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_METRICS_ENABLED: "true"' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-https://nooook-monitoring.duckdns.org}' deploy/monitoring/docker-compose.monitoring.yml
-grep -Fq 'GRAFANA_DISCORD_WEBHOOK_URL: ${GRAFANA_DISCORD_WEBHOOK_URL:?GRAFANA_DISCORD_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'NOOOOK_DISCORD_WEBHOOK_URL: ${NOOOOK_DISCORD_WEBHOOK_URL:?NOOOOK_DISCORD_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GRAFANA_DISCORD_DEV_WEBHOOK_URL: ${GRAFANA_DISCORD_DEV_WEBHOOK_URL:?GRAFANA_DISCORD_DEV_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GRAFANA_DISCORD_PROD_WEBHOOK_URL: ${GRAFANA_DISCORD_PROD_WEBHOOK_URL:?GRAFANA_DISCORD_PROD_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'network_mode: host' deploy/monitoring/docker-compose.monitoring.yml
@@ -122,11 +122,13 @@ grep -Fq 'Prod5xxRateHigh' deploy/monitoring/prometheus/rules/reading-garden-pro
 grep -Fq 'ProdAvgLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'ProdHikariPendingConnections' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'type: discord' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
-grep -Fq 'url: $GRAFANA_DISCORD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'name: nooook-discord' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'url: $NOOOOK_DISCORD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'url: $GRAFANA_DISCORD_DEV_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'url: $GRAFANA_DISCORD_PROD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'receiver: reading-garden-discord-dev' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 grep -Fq 'receiver: reading-garden-discord-prod' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
+grep -Fq 'receiver: nooook-discord' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 grep -Fq 'GrafanaDevExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'GrafanaProdExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'GrafanaDevAppMetricsDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
@@ -138,11 +140,11 @@ grep -Fq 'GrafanaHostDiskAlmostFull' deploy/monitoring/grafana/provisioning/aler
 grep -Fq 'for: 1m' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq '{container=~"reading-garden-prod-.*"} |~ "(?i)(error|exception|traceback)"' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq '{container=~"reading-garden-dev-.*"} |~ "(?i)(error|exception|traceback)"' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'GRAFANA_DISCORD_WEBHOOK_URL=' deploy/monitoring/.env.example
+grep -Fq 'NOOOOK_DISCORD_WEBHOOK_URL=' deploy/monitoring/.env.example
 grep -Fq 'GRAFANA_DISCORD_DEV_WEBHOOK_URL=' deploy/monitoring/.env.example
 grep -Fq 'GRAFANA_DISCORD_PROD_WEBHOOK_URL=' deploy/monitoring/.env.example
 grep -Fq 'docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate' deploy/monitoring/scripts/bootstrap-monitoring.sh
-grep -Fq 'GRAFANA_DISCORD_WEBHOOK_URL' deploy/monitoring/scripts/bootstrap-monitoring.sh
+grep -Fq 'NOOOOK_DISCORD_WEBHOOK_URL' deploy/monitoring/scripts/bootstrap-monitoring.sh
 grep -Fq '/api/datasources/uid/prometheus/health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'VERIFY_TIMEOUT_SECONDS' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"' deploy/monitoring/scripts/verify-monitoring.sh
@@ -163,6 +165,7 @@ grep -Fq '/api/v1/provisioning/contact-points' deploy/monitoring/scripts/verify-
 grep -Fq '/api/v1/provisioning/alert-rules/${rule_uid}' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'grafana-dev-external-health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'grafana-dev-app-error-logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'nooook-discord' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'reading-garden-discord-dev' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'reading-garden-discord-prod' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scripts/verify-monitoring.sh
