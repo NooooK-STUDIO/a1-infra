@@ -68,7 +68,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "probe_success{job=\"blackbox-http\",instance=\"https://readinggarden.duckdns.org/api/health\"}"
+          "expr": "probe_success{job=\"blackbox-http\",instance=\"https://readinggarden.duckdns.org/api/health\"}",
+          "legendFormat": "prod external health"
         }
       ]
     },
@@ -125,7 +126,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(up{job=\"reading-garden-prod-app\"})"
+          "expr": "sum(up{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "prod app"
         }
       ]
     },
@@ -182,7 +184,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "up{job=\"caddy\"}"
+          "expr": "up{job=\"caddy\"}",
+          "legendFormat": "caddy"
         }
       ]
     },
@@ -239,7 +242,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "up{job=\"cadvisor\"}"
+          "expr": "up{job=\"cadvisor\"}",
+          "legendFormat": "cadvisor"
         }
       ]
     },
@@ -297,7 +301,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"reading-garden-prod-app\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))"
+          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"reading-garden-prod-app\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
+          "legendFormat": "avg latency"
         }
       ]
     },
@@ -355,7 +360,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max(http_server_requests_seconds_max{job=\"reading-garden-prod-app\"})"
+          "expr": "max(http_server_requests_seconds_max{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "max latency"
         }
       ]
     },
@@ -413,7 +419,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\",status=~\"5..\"}[5m])) or vector(0)"
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\",status=~\"5..\"}[5m])) or vector(0)",
+          "legendFormat": "5xx"
         }
       ]
     },
@@ -470,7 +477,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(hikaricp_connections_active{job=\"reading-garden-prod-app\"})"
+          "expr": "sum(hikaricp_connections_active{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "active"
         }
       ]
     },
@@ -528,7 +536,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max(process_uptime_seconds{job=\"reading-garden-prod-app\"})"
+          "expr": "max(process_uptime_seconds{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "uptime"
         }
       ]
     },
@@ -585,7 +594,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(jvm_threads_live_threads{job=\"reading-garden-prod-app\"})"
+          "expr": "sum(jvm_threads_live_threads{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "live threads"
         }
       ]
     },
@@ -642,7 +652,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "caddy_config_last_reload_successful{job=\"caddy\"}"
+          "expr": "caddy_config_last_reload_successful{job=\"caddy\"}",
+          "legendFormat": "last reload"
         }
       ]
     },
@@ -700,7 +711,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "100 * (1 - avg by(instance) (rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[5m])))"
+          "expr": "100 * (1 - avg by(instance) (rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[5m])))",
+          "legendFormat": "{{instance}}"
         }
       ]
     },
@@ -756,7 +768,8 @@
       "targets": [
         {
           "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"reading-garden-prod-app\"}[5m])))",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "p95 latency"
         }
       ],
       "title": "Prod p95 Latency",
@@ -813,7 +826,8 @@
       "targets": [
         {
           "expr": "sum(count_over_time({container=~\"reading-garden-prod-.*\"} |~ \"(?i)(\\\\bERROR\\\\b|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\" [30m]))",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "error logs"
         }
       ],
       "title": "Prod Recent Error Logs",
@@ -870,7 +884,8 @@
       "targets": [
         {
           "expr": "sum(ALERTS{env=\"prod\",alertstate=\"firing\"}) or vector(0)",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "active alerts"
         }
       ],
       "title": "Prod Active Alerts",
@@ -928,7 +943,8 @@
       "targets": [
         {
           "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "requests/sec"
         }
       ],
       "title": "Prod Request Rate",
@@ -1019,7 +1035,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m])) by (status)"
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m])) by (status)",
+          "legendFormat": "{{status}}"
         }
       ]
     },
@@ -1109,7 +1126,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"reading-garden-prod-app\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))"
+          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"reading-garden-prod-app\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
+          "legendFormat": "avg latency"
         }
       ]
     },
@@ -1199,7 +1217,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(jvm_memory_used_bytes{job=\"reading-garden-prod-app\",area=\"heap\"}) by (id)"
+          "expr": "sum(jvm_memory_used_bytes{job=\"reading-garden-prod-app\",area=\"heap\"}) by (id)",
+          "legendFormat": "{{id}}"
         }
       ]
     },
@@ -1289,7 +1308,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max(jvm_gc_pause_seconds_max{job=\"reading-garden-prod-app\"})"
+          "expr": "max(jvm_gc_pause_seconds_max{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "gc max pause"
         }
       ]
     },
@@ -1379,7 +1399,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(caddy_http_requests_total{job=\"caddy\"}[5m])) by (code)"
+          "expr": "sum(rate(caddy_http_requests_total{job=\"caddy\"}[5m])) by (code)",
+          "legendFormat": "{{code}}"
         }
       ]
     },
@@ -1469,7 +1490,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(caddy_http_request_duration_seconds_bucket{job=\"caddy\"}[5m])))"
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(caddy_http_request_duration_seconds_bucket{job=\"caddy\"}[5m])))",
+          "legendFormat": "p95 latency"
         }
       ]
     },
@@ -1559,7 +1581,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(1 - (node_filesystem_avail_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"})) * 100"
+          "expr": "(1 - (node_filesystem_avail_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"})) * 100",
+          "legendFormat": "{{mountpoint}}"
         }
       ]
     },
@@ -1649,7 +1672,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(1 - (node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"})) * 100"
+          "expr": "(1 - (node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"})) * 100",
+          "legendFormat": "memory used"
         }
       ]
     },
@@ -1738,7 +1762,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "node_load1{job=\"node-exporter\"}"
+          "expr": "node_load1{job=\"node-exporter\"}",
+          "legendFormat": "load 1m"
         }
       ]
     },
@@ -1827,7 +1852,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(hikaricp_connections_pending{job=\"reading-garden-prod-app\"})"
+          "expr": "sum(hikaricp_connections_pending{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "pending"
         }
       ]
     }
