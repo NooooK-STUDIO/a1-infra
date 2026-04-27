@@ -8,6 +8,20 @@ GRAFANA_URL="${GRAFANA_URL:-http://127.0.0.1:3000}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:9090}"
 DEV_BASE_URL="${DEV_BASE_URL:-https://readinggarden-dev.duckdns.org}"
 VERIFY_TIMEOUT_SECONDS="${VERIFY_TIMEOUT_SECONDS:-60}"
+EXPECTED_ALERT_RULES=(
+  DevAppMetricsDown
+  DevExternalHealthDown
+  Dev5xxRateHigh
+  DevAvgLatencyHigh
+  HikariPendingConnections
+  CaddyMetricsDown
+  CaddyRequestLatencyHigh
+  CaddyReloadFailed
+  ContainerExporterDown
+  HostDiskAlmostFull
+  HostMemoryHigh
+  MonitoringTargetDown
+)
 
 read_env_file() {
   local key="$1"
@@ -54,6 +68,32 @@ assert_prometheus_query_has_result() {
   done
 }
 
+response_has_expected_alert_rules() {
+  local response="$1"
+  local expected_alert
+
+  printf '%s' "$response" | grep -Fq '"status":"success"' || return 1
+  printf '%s' "$response" | grep -Fq '"health":"ok"' || return 1
+
+  for expected_alert in "${EXPECTED_ALERT_RULES[@]}"; do
+    printf '%s' "$response" | grep -Fq "\"name\":\"${expected_alert}\"" || return 1
+  done
+}
+
+wait_for_prometheus_rules() {
+  local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
+  local response
+
+  until response="$(curl -fsS "${PROMETHEUS_URL}/api/v1/rules")" &&
+    response_has_expected_alert_rules "$response"; do
+    if (( SECONDS >= deadline )); then
+      echo "Prometheus did not load the expected phase 1 alert rules within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
 wait_for_grafana_datasource() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
 
@@ -86,6 +126,7 @@ wait_for_grafana_dashboard_panels() {
 }
 
 wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"
+wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-dev-app"}) > 0' 'reading-garden-dev-app'
 assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'

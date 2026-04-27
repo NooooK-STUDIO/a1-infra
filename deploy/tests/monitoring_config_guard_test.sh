@@ -73,6 +73,13 @@ grep -Fq 'docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force
 grep -Fq '/api/datasources/uid/prometheus/health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'VERIFY_TIMEOUT_SECONDS' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'wait_for_prometheus_rules' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq '/api/v1/rules' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Dev5xxRateHigh' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'DevAvgLatencyHigh' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'HikariPendingConnections' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'CaddyRequestLatencyHigh' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'CaddyReloadFailed' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_datasource' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'wait_for_grafana_dashboard_panels' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-dev-overview' deploy/monitoring/scripts/verify-monitoring.sh
