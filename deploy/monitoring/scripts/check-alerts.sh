@@ -20,6 +20,9 @@ EXPECTED_ALERT_RULES=(
   HostDiskAlmostFull
   HostMemoryHigh
   MonitoringTargetDown
+  PostgresExporterDown
+  PostgresConnectionsHigh
+  PostgresDeadlocksDetected
 )
 
 rules_file="$(mktemp)"

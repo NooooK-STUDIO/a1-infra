@@ -6,6 +6,7 @@ CONFIG_OUTPUT="$(
   NOOOOK_DISCORD_WEBHOOK_URL=https://example.invalid/nooook-discord-webhook \
   GRAFANA_DISCORD_DEV_WEBHOOK_URL=https://example.invalid/dev-discord-webhook \
   GRAFANA_DISCORD_PROD_WEBHOOK_URL=https://example.invalid/prod-discord-webhook \
+  POSTGRES_EXPORTER_PASSWORD=postgres-exporter-secret \
   docker compose -f deploy/monitoring/docker-compose.monitoring.yml config
 )"
 
@@ -105,6 +106,7 @@ printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'alloy:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'node-exporter:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'cadvisor:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'blackbox-exporter:'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'postgres-exporter:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'container_name: a1-monitoring-loki'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'container_name: a1-monitoring-alloy'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q '/etc/grafana/provisioning'
@@ -121,6 +123,10 @@ printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_ROOT_URL: https://nooook-mon
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'NOOOOK_DISCORD_WEBHOOK_URL: https://example.invalid/nooook-discord-webhook'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_DEV_WEBHOOK_URL: https://example.invalid/dev-discord-webhook'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_PROD_WEBHOOK_URL: https://example.invalid/prod-discord-webhook'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'host.docker.internal=host-gateway'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'DATA_SOURCE_URI: host.docker.internal:15432/postgres?sslmode=disable'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'DATA_SOURCE_USER: reading_garden_monitoring'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'DATA_SOURCE_PASS: postgres-exporter-secret'
 
 assert_no_published_ports prometheus
 assert_no_published_ports grafana
@@ -129,8 +135,9 @@ assert_no_published_ports alloy
 assert_localhost_port node-exporter 9100 9100
 assert_localhost_port cadvisor 18082 8080
 assert_localhost_port blackbox-exporter 9115 9115
+assert_localhost_port postgres-exporter 9187 9187
 
-if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|postgres-exporter:|discord(app)?\.com/api/webhooks/[0-9]+'; then
+if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|discord(app)?\.com/api/webhooks/[0-9]+'; then
     echo "deferred services and real Discord webhook URLs must not be present" >&2
     exit 1
 fi

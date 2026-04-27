@@ -26,6 +26,19 @@ load_secret_env() {
     export "$var_name=$(tr -d '\r\n' < "$secret_path")"
 }
 
+load_optional_secret_env() {
+    local var_name="$1"
+    local secret_path="$2"
+
+    if [[ -n "${!var_name:-}" ]]; then
+        return 0
+    fi
+
+    if [[ -f "$secret_path" ]]; then
+        export "$var_name=$(tr -d '\r\n' < "$secret_path")"
+    fi
+}
+
 if [[ ! -f "$POSTGRES_COMPOSE_FILE" ]]; then
     echo "Missing shared PostgreSQL compose file: $POSTGRES_COMPOSE_FILE" >&2
     exit 1
@@ -37,6 +50,7 @@ load_secret_env READING_GARDEN_PROD_APP_PASSWORD "${POSTGRES_SECRETS_DIR}/readin
 load_secret_env READING_GARDEN_PROD_MIGRATOR_PASSWORD "${POSTGRES_SECRETS_DIR}/reading_garden_prod_migrator.password"
 load_secret_env READING_GARDEN_DEV_APP_PASSWORD "${POSTGRES_SECRETS_DIR}/reading_garden_dev_app.password"
 load_secret_env READING_GARDEN_DEV_MIGRATOR_PASSWORD "${POSTGRES_SECRETS_DIR}/reading_garden_dev_migrator.password"
+load_optional_secret_env POSTGRES_EXPORTER_PASSWORD "${POSTGRES_SECRETS_DIR}/postgres_exporter.password"
 
 if ! docker network inspect "$SHARED_BACKEND_NETWORK_NAME" >/dev/null 2>&1; then
     docker network create "$SHARED_BACKEND_NETWORK_NAME" >/dev/null
@@ -54,3 +68,22 @@ until docker inspect --format='{{.State.Health.Status}}' "$POSTGRES_CONTAINER_NA
     fi
     sleep 2
 done
+
+if [[ -n "${POSTGRES_EXPORTER_PASSWORD:-}" ]]; then
+    docker exec \
+        -e POSTGRES_EXPORTER_PASSWORD="$POSTGRES_EXPORTER_PASSWORD" \
+        "$POSTGRES_CONTAINER_NAME" \
+        psql -v ON_ERROR_STOP=1 -v postgres_exporter_password="$POSTGRES_EXPORTER_PASSWORD" --username "$POSTGRES_SUPERUSER" --dbname postgres <<'SQL'
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'reading_garden_monitoring') THEN
+        CREATE ROLE reading_garden_monitoring LOGIN;
+    END IF;
+END
+$$;
+ALTER ROLE reading_garden_monitoring WITH LOGIN PASSWORD :'postgres_exporter_password';
+GRANT pg_monitor TO reading_garden_monitoring;
+SQL
+else
+    echo "Skipping PostgreSQL monitoring role setup because POSTGRES_EXPORTER_PASSWORD is not set."
+fi

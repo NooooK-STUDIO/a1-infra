@@ -14,8 +14,8 @@ contactPoints:
         settings:
           url: $NOOOOK_DISCORD_WEBHOOK_URL
           use_discord_username: false
-          title: '{{ template "default.title" . }}'
-          message: '{{ template "default.message" . }}'
+          title: '{{ template "reading_garden_discord.title" . }}'
+          message: '{{ template "reading_garden_discord.message" . }}'
   - orgId: 1
     name: reading-garden-discord-dev
     receivers:
@@ -25,8 +25,8 @@ contactPoints:
         settings:
           url: $GRAFANA_DISCORD_DEV_WEBHOOK_URL
           use_discord_username: false
-          title: '{{ template "default.title" . }}'
-          message: '{{ template "default.message" . }}'
+          title: '{{ template "reading_garden_discord.title" . }}'
+          message: '{{ template "reading_garden_discord.message" . }}'
   - orgId: 1
     name: reading-garden-discord-prod
     receivers:
@@ -36,5 +36,5 @@ contactPoints:
         settings:
           url: $GRAFANA_DISCORD_PROD_WEBHOOK_URL
           use_discord_username: false
-          title: '{{ template "default.title" . }}'
-          message: '{{ template "default.message" . }}'
+          title: '{{ template "reading_garden_discord.title" . }}'
+          message: '{{ template "reading_garden_discord.message" . }}'

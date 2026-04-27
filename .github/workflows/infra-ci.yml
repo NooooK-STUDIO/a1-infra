@@ -69,6 +69,7 @@ jobs:
           NOOOOK_DISCORD_WEBHOOK_URL=https://example.invalid/nooook-discord-webhook \
           GRAFANA_DISCORD_DEV_WEBHOOK_URL=https://example.invalid/dev-discord-webhook \
           GRAFANA_DISCORD_PROD_WEBHOOK_URL=https://example.invalid/prod-discord-webhook \
+          POSTGRES_EXPORTER_PASSWORD=ci-secret \
             docker compose -f deploy/monitoring/docker-compose.monitoring.yml config >/dev/null
 
       - name: Check Prometheus config and rules

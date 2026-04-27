@@ -118,6 +118,23 @@ services:
         protocol: tcp
     restart: unless-stopped
 
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.19.1
+    container_name: a1-monitoring-postgres-exporter
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      DATA_SOURCE_URI: host.docker.internal:15432/postgres?sslmode=disable
+      DATA_SOURCE_USER: reading_garden_monitoring
+      DATA_SOURCE_PASS: ${POSTGRES_EXPORTER_PASSWORD:?POSTGRES_EXPORTER_PASSWORD is required}
+      PG_EXPORTER_AUTO_DISCOVER_DATABASES: "true"
+    ports:
+      - target: 9187
+        published: "9187"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    restart: unless-stopped
+
 volumes:
   prometheus-data:
   grafana-data:
