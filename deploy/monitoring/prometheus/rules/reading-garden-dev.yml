@@ -25,6 +25,42 @@ groups:
           summary: ReadingGarden dev public health probe is failing
           runbook: Check host Caddy, dev upstream, and the public dev health endpoint.
 
+      - alert: Dev5xxRateHigh
+        expr: sum(rate(http_server_requests_seconds_count{job="reading-garden-dev-app",status=~"5.."}[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+          env: dev
+          service: reading-garden-kotlin
+          component: app
+        annotations:
+          summary: ReadingGarden dev is returning HTTP 5xx responses
+          runbook: Check dev application logs, recent deployments, and upstream error responses.
+
+      - alert: DevAvgLatencyHigh
+        expr: sum(rate(http_server_requests_seconds_sum{job="reading-garden-dev-app"}[5m])) / sum(rate(http_server_requests_seconds_count{job="reading-garden-dev-app"}[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          env: dev
+          service: reading-garden-kotlin
+          component: app
+        annotations:
+          summary: ReadingGarden dev average HTTP latency is above 500 ms
+          runbook: Check slow endpoints, database latency, and current dev traffic.
+
+      - alert: HikariPendingConnections
+        expr: sum(hikaricp_connections_pending{job="reading-garden-dev-app"}) > 0
+        for: 5m
+        labels:
+          severity: warning
+          env: dev
+          service: reading-garden-kotlin
+          component: app
+        annotations:
+          summary: ReadingGarden dev has pending database pool connections
+          runbook: Check shared PostgreSQL health, active queries, and Hikari pool saturation.
+
       - alert: CaddyMetricsDown
         expr: up{job="caddy"} == 0
         for: 2m
@@ -36,6 +72,30 @@ groups:
         annotations:
           summary: Caddy metrics target is down
           runbook: Check host Caddy admin metrics on the local admin endpoint.
+
+      - alert: CaddyRequestLatencyHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(caddy_http_request_duration_seconds_bucket{job="caddy"}[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warning
+          env: infra
+          service: caddy
+          component: caddy
+        annotations:
+          summary: Caddy p95 request duration is above 1 second
+          runbook: Check Caddy access patterns, upstream latency, and host resource pressure.
+
+      - alert: CaddyReloadFailed
+        expr: caddy_config_last_reload_successful{job="caddy"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          env: infra
+          service: caddy
+          component: caddy
+        annotations:
+          summary: Caddy last config reload failed
+          runbook: Run caddy validate on the host Caddyfile and inspect the caddy systemd journal.
 
       - alert: ContainerExporterDown
         expr: up{job="cadvisor"} == 0

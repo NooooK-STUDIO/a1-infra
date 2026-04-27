@@ -58,7 +58,12 @@ grep -Fq 'job_name: blackbox-http' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'https://readinggarden-dev.duckdns.org/api/health' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'https://readinggarden.duckdns.org/api/health' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'DevExternalHealthDown' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
+grep -Fq 'Dev5xxRateHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
+grep -Fq 'DevAvgLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
+grep -Fq 'HikariPendingConnections' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'ContainerExporterDown' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
+grep -Fq 'CaddyRequestLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
+grep -Fq 'CaddyReloadFailed' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'HostMemoryHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 if rg -n 'Prod[A-Za-z]+Down|env: prod|reading-garden-prod-app' deploy/monitoring/prometheus/rules; then
     echo "prod alerting is phase-later, not phase 1" >&2
