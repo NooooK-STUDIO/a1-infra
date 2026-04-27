@@ -266,6 +266,13 @@ grep -Fq 'Expected alert rules' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'PostgresExporterDown' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'PostgresConnectionsHigh' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'PostgresDeadlocksDetected' deploy/monitoring/scripts/check-alerts.sh
+grep -Fq '"legendFormat": "{{datname}}"' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
+grep -Fq '"legendFormat": "{{status}}"' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq '"legendFormat": "{{status}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq '"legendFormat": "{{id}}"' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq '"legendFormat": "{{id}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
+grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 grep -Fq './scripts/check-alerts.sh' deploy/monitoring/RUNBOOK.md
 if rg -n 'PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "monitoring verification must not require prod live docs" >&2
