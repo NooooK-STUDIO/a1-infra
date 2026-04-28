@@ -11,12 +11,14 @@ DEV_BASE_URL="${DEV_BASE_URL:-https://readinggarden-dev.duckdns.org}"
 VERIFY_TIMEOUT_SECONDS="${VERIFY_TIMEOUT_SECONDS:-60}"
 EXPECTED_ALERT_RULES=(
   DevAppMetricsDown
-  DevExternalHealthDown
+  DevLocalCaddyHealthDown
+  DevPublicExternalHealthDown
   Dev5xxRateHigh
   DevAvgLatencyHigh
   HikariPendingConnections
   ProdAppMetricsDown
-  ProdExternalHealthDown
+  ProdLocalCaddyHealthDown
+  ProdPublicExternalHealthDown
   Prod5xxRateHigh
   ProdAvgLatencyHigh
   ProdHikariPendingConnections
@@ -208,8 +210,10 @@ wait_for_grafana_alerting() {
   local contact_points_url="${GRAFANA_URL}/api/v1/provisioning/contact-points"
   local policies_url="${GRAFANA_URL}/api/v1/provisioning/policies"
   local alert_rule_uids=(
-    grafana-dev-external-health
-    grafana-prod-external-health
+    grafana-dev-local-caddy-health
+    grafana-prod-local-caddy-health
+    grafana-dev-public-external-health
+    grafana-prod-public-external-health
     grafana-dev-app-metrics
     grafana-prod-app-metrics
     grafana-caddy-metrics
@@ -268,13 +272,17 @@ wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-dev-app"}) > 0' 'reading-garden-dev-app'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-prod-app"}) > 0' 'reading-garden-prod-app'
-assert_prometheus_query_has_result 'probe_success{job="blackbox-http",instance="https://readinggarden.duckdns.org/api/health"} == 1' 'prod public health blackbox'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://readinggarden.duckdns.org/api/health"} == 1' 'prod public health blackbox'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://readinggarden-dev.duckdns.org/api/health"} == 1' 'dev public health blackbox'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",env="prod"} == 1' 'prod local caddy health blackbox'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",env="dev"} == 1' 'dev local caddy health blackbox'
 assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'
 assert_prometheus_query_has_result 'up{job="node-exporter"} == 1' 'node-exporter'
 assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'
 assert_prometheus_query_has_result 'up{job="postgres-exporter"} == 1' 'postgres-exporter'
 assert_prometheus_query_has_result 'pg_up{job="postgres-exporter"} == 1' 'postgres database'
-assert_prometheus_query_has_result 'up{job="blackbox-http"} == 1' 'blackbox-http'
+assert_prometheus_query_has_result 'up{job="blackbox-public-http"} == 1' 'blackbox-public-http'
+assert_prometheus_query_has_result 'up{job="blackbox-local-caddy"} == 1' 'blackbox-local-caddy'
 assert_loki_query_has_result '{unit="caddy.service"}' 'caddy systemd logs'
 
 wait_for_grafana_datasource

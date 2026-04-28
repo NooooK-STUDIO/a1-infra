@@ -13,6 +13,5 @@ templates:
       **{{ index .Labels "alertname" }}** `{{ index .Labels "env" }}` `{{ index .Labels "severity" }}`
       {{ with index .Annotations "summary" }}{{ . }}{{ end }}
       {{ with index .Annotations "logs_dashboard" }}Logs: {{ . }}{{ end }}
-      {{ with index .Annotations "runbook_url" }}Runbook: {{ . }}{{ end }}
       {{ end -}}
       {{- end }}

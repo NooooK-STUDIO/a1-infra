@@ -74,21 +74,56 @@ scrape_configs:
           service: postgres
           component: database
 
-  - job_name: blackbox-http
+  - job_name: blackbox-public-http
     metrics_path: /probe
     params:
       module: [http_2xx]
     static_configs:
       - targets:
           - https://readinggarden-dev.duckdns.org/api/health
+        labels:
+          env: dev
+          service: reading-garden-kotlin
+          component: blackbox-public
+      - targets:
           - https://readinggarden.duckdns.org/api/health
         labels:
+          env: prod
           service: reading-garden-kotlin
-          component: blackbox
+          component: blackbox-public
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
       - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+
+  - job_name: blackbox-local-caddy
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://127.0.0.1/api/health
+        labels:
+          env: dev
+          hostname: readinggarden-dev.duckdns.org
+          service: reading-garden-kotlin
+          component: blackbox-local-caddy
+      - targets:
+          - https://127.0.0.1/api/health
+        labels:
+          env: prod
+          hostname: readinggarden.duckdns.org
+          service: reading-garden-kotlin
+          component: blackbox-local-caddy
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [hostname]
+        target_label: __param_hostname
+      - source_labels: [hostname]
         target_label: instance
       - target_label: __address__
         replacement: 127.0.0.1:9115
