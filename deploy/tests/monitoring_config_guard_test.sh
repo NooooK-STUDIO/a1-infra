@@ -7,7 +7,6 @@ test -f deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 test -f deploy/monitoring/blackbox/blackbox.yml
 test -f deploy/monitoring/loki/loki.yml
 test -f deploy/monitoring/alloy/config.alloy
-test -f deploy/monitoring/SECURITY.md
 test -f deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 test -f deploy/monitoring/grafana/provisioning/dashboards/dashboards.yml
 test -f deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
@@ -23,7 +22,6 @@ test -x deploy/monitoring/scripts/bootstrap-monitoring.sh
 test -x deploy/monitoring/scripts/verify-monitoring.sh
 test -x deploy/monitoring/scripts/check-alerts.sh
 test -x deploy/monitoring/scripts/backup-grafana-state.sh
-test -f deploy/monitoring/RUNBOOK.md
 
 grep -Fq 'retention.time=7d' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'container_name: a1-monitoring-prometheus' deploy/monitoring/docker-compose.monitoring.yml
@@ -44,6 +42,7 @@ grep -Fq 'grafana/loki' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/loki:3.5.2' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'grafana/alloy' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'quay.io/prometheuscommunity/postgres-exporter:v0.19.1' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq -- '--web.listen-address=127.0.0.1:9115' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq -- '--web.listen-address=127.0.0.1:9187' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'DATA_SOURCE_URI: 127.0.0.1:15432/postgres?sslmode=disable' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'DATA_SOURCE_USER: reading_garden_monitoring' deploy/monitoring/docker-compose.monitoring.yml
@@ -135,11 +134,17 @@ grep -Fq '127.0.0.1:9115' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:9187' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'job_name: caddy' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'job_name: cadvisor' deploy/monitoring/prometheus/prometheus.yml
-grep -Fq 'job_name: blackbox-http' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq 'job_name: blackbox-public-http' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq 'job_name: blackbox-local-caddy' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'job_name: postgres-exporter' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq 'https://127.0.0.1/api/health' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq 'hostname: readinggarden-dev.duckdns.org' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq 'hostname: readinggarden.duckdns.org' deploy/monitoring/prometheus/prometheus.yml
+grep -Fq '__param_hostname' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'https://readinggarden-dev.duckdns.org/api/health' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq 'https://readinggarden.duckdns.org/api/health' deploy/monitoring/prometheus/prometheus.yml
-grep -Fq 'DevExternalHealthDown' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
+grep -Fq 'DevLocalCaddyHealthDown' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
+grep -Fq 'DevPublicExternalHealthDown' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'Dev5xxRateHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'DevAvgLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'HikariPendingConnections' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
@@ -151,7 +156,8 @@ grep -Fq 'PostgresExporterDown' deploy/monitoring/prometheus/rules/reading-garde
 grep -Fq 'PostgresConnectionsHigh' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'PostgresDeadlocksDetected' deploy/monitoring/prometheus/rules/reading-garden-dev.yml
 grep -Fq 'ProdAppMetricsDown' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
-grep -Fq 'ProdExternalHealthDown' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+grep -Fq 'ProdLocalCaddyHealthDown' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
+grep -Fq 'ProdPublicExternalHealthDown' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'Prod5xxRateHigh' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'ProdAvgLatencyHigh' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
 grep -Fq 'ProdHikariPendingConnections' deploy/monitoring/prometheus/rules/reading-garden-prod.yml
@@ -179,8 +185,10 @@ grep -Fq 'url: $GRAFANA_DISCORD_PROD_WEBHOOK_URL' deploy/monitoring/grafana/prov
 grep -Fq 'receiver: reading-garden-discord-dev' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 grep -Fq 'receiver: reading-garden-discord-prod' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 grep -Fq 'receiver: nooook-discord' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
-grep -Fq 'GrafanaDevExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'GrafanaProdExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaDevLocalCaddyHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaProdLocalCaddyHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaDevPublicExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
+grep -Fq 'GrafanaProdPublicExternalHealthDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'GrafanaDevAppMetricsDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'GrafanaProdAppMetricsDown' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
 grep -Fq 'GrafanaDevAppErrorLogsDetected' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
@@ -226,7 +234,10 @@ grep -Fq -- '--volumes-from "${GRAFANA_CONTAINER}:ro"' deploy/monitoring/scripts
 grep -Fq 'chmod 600' deploy/monitoring/scripts/backup-grafana-state.sh
 grep -Fq '/api/v1/provisioning/contact-points' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/v1/provisioning/alert-rules/${rule_uid}' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'grafana-dev-external-health' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'grafana-dev-local-caddy-health' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'grafana-prod-local-caddy-health' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'grafana-dev-public-external-health' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'grafana-prod-public-external-health' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'grafana-dev-app-error-logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'nooook-discord' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'reading-garden-discord-dev' deploy/monitoring/scripts/verify-monitoring.sh
@@ -270,31 +281,21 @@ grep -Fq 'PostgresExporterDown' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'PostgresConnectionsHigh' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'PostgresDeadlocksDetected' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq '"legendFormat": "{{datname}}"' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
+
+if rg -n 'RUNBOOK|SECURITY\\.md|runbook_url|^[[:space:]]*runbook:' deploy/monitoring; then
+    echo "runbook/security docs and Grafana runbook links must not remain" >&2
+    exit 1
+fi
 grep -Fq '"legendFormat": "{{status}}"' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq '"legendFormat": "{{status}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 grep -Fq '"legendFormat": "{{id}}"' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq '"legendFormat": "{{id}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
 grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/reading-garden-dev-overview.json
 grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq './scripts/check-alerts.sh' deploy/monitoring/RUNBOOK.md
 if rg -n 'PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "monitoring verification must not require prod live docs" >&2
     exit 1
 fi
-grep -Fq 'PostgreSQL Metrics' deploy/monitoring/RUNBOOK.md
-grep -Fq 'reading_garden_monitoring' deploy/monitoring/RUNBOOK.md
-grep -Fq 'POSTGRES_EXPORTER_PASSWORD' deploy/monitoring/RUNBOOK.md
-grep -Fq './scripts/verify-monitoring.sh' deploy/monitoring/RUNBOOK.md
-grep -Fq 'ReadingGarden Logs' deploy/monitoring/RUNBOOK.md
-grep -Fq '{container=~"reading-garden-prod-.*"}' deploy/monitoring/RUNBOOK.md
-grep -Fq 'Prod Recent Error Logs' deploy/monitoring/RUNBOOK.md
-grep -Fq 'Dev Recent Error Logs' deploy/monitoring/RUNBOOK.md
-grep -Fq 'logs_dashboard' deploy/monitoring/RUNBOOK.md
-grep -Fq 'stale FCM token cleanup logs' deploy/monitoring/RUNBOOK.md
-grep -Fq './scripts/backup-grafana-state.sh' deploy/monitoring/RUNBOOK.md
-grep -Fq '/opt/infra/monitoring/backups' deploy/monitoring/RUNBOOK.md
-grep -Fq 'self-log loops' deploy/monitoring/RUNBOOK.md
-grep -Fq 'Alertmanager Later' deploy/monitoring/RUNBOOK.md
 
 if rg -n 'discord(app)?\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]+' deploy/monitoring; then
     echo "Discord webhook URLs must not be committed" >&2

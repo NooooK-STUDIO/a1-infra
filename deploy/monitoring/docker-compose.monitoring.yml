@@ -109,13 +109,10 @@ services:
     container_name: a1-monitoring-blackbox-exporter
     command:
       - --config.file=/etc/blackbox_exporter/blackbox.yml
+      - --web.listen-address=127.0.0.1:9115
+    network_mode: host
     volumes:
       - ./blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
-    ports:
-      - target: 9115
-        published: "9115"
-        host_ip: 127.0.0.1
-        protocol: tcp
     restart: unless-stopped
 
   postgres-exporter:

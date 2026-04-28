@@ -11,19 +11,28 @@ groups:
           component: app
         annotations:
           summary: ReadingGarden dev actuator metrics target is down
-          runbook: Check dev blue/green containers and management port 8081 on the shared backend network.
 
-      - alert: DevExternalHealthDown
-        expr: probe_success{job="blackbox-http",instance="https://readinggarden-dev.duckdns.org/api/health"} == 0
+      - alert: DevLocalCaddyHealthDown
+        expr: probe_success{job="blackbox-local-caddy",env="dev"} == 0
         for: 1m
         labels:
           severity: critical
           env: dev
           service: reading-garden-kotlin
-          component: blackbox
+          component: blackbox-local-caddy
+        annotations:
+          summary: ReadingGarden dev local Caddy health probe is failing
+
+      - alert: DevPublicExternalHealthDown
+        expr: probe_success{job="blackbox-public-http",instance="https://readinggarden-dev.duckdns.org/api/health"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          env: dev
+          service: reading-garden-kotlin
+          component: blackbox-public
         annotations:
           summary: ReadingGarden dev public health probe is failing
-          runbook: Check host Caddy, dev upstream, and the public dev health endpoint.
 
       - alert: Dev5xxRateHigh
         expr: sum(rate(http_server_requests_seconds_count{job="reading-garden-dev-app",status=~"5.."}[5m])) > 0
@@ -35,7 +44,6 @@ groups:
           component: app
         annotations:
           summary: ReadingGarden dev is returning HTTP 5xx responses
-          runbook: Check dev application logs, recent deployments, and upstream error responses.
 
       - alert: DevAvgLatencyHigh
         expr: sum(rate(http_server_requests_seconds_sum{job="reading-garden-dev-app"}[5m])) / sum(rate(http_server_requests_seconds_count{job="reading-garden-dev-app"}[5m])) > 0.5
@@ -47,7 +55,6 @@ groups:
           component: app
         annotations:
           summary: ReadingGarden dev average HTTP latency is above 500 ms
-          runbook: Check slow endpoints, database latency, and current dev traffic.
 
       - alert: HikariPendingConnections
         expr: sum(hikaricp_connections_pending{job="reading-garden-dev-app"}) > 0
@@ -59,7 +66,6 @@ groups:
           component: app
         annotations:
           summary: ReadingGarden dev has pending database pool connections
-          runbook: Check shared PostgreSQL health, active queries, and Hikari pool saturation.
 
       - alert: CaddyMetricsDown
         expr: up{job="caddy"} == 0
@@ -71,7 +77,6 @@ groups:
           component: caddy
         annotations:
           summary: Caddy metrics target is down
-          runbook: Check host Caddy admin metrics on the local admin endpoint.
 
       - alert: CaddyRequestLatencyHigh
         expr: histogram_quantile(0.95, sum by (le) (rate(caddy_http_request_duration_seconds_bucket{job="caddy"}[5m]))) > 1
@@ -83,7 +88,6 @@ groups:
           component: caddy
         annotations:
           summary: Caddy p95 request duration is above 1 second
-          runbook: Check Caddy access patterns, upstream latency, and host resource pressure.
 
       - alert: CaddyReloadFailed
         expr: caddy_config_last_reload_successful{job="caddy"} == 0
@@ -95,7 +99,6 @@ groups:
           component: caddy
         annotations:
           summary: Caddy last config reload failed
-          runbook: Run caddy validate on the host Caddyfile and inspect the caddy systemd journal.
 
       - alert: ContainerExporterDown
         expr: up{job="cadvisor"} == 0
@@ -107,7 +110,6 @@ groups:
           component: container
         annotations:
           summary: cAdvisor container metrics target is down
-          runbook: Check the a1-monitoring-cadvisor container and localhost port 18082.
 
       - alert: HostDiskAlmostFull
         expr: node_filesystem_avail_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} < 0.15
@@ -119,7 +121,6 @@ groups:
           component: filesystem
         annotations:
           summary: Host root filesystem is above 85 percent usage
-          runbook: Inspect disk usage on the Oracle host and prune only after confirming active volumes.
 
       - alert: HostMemoryHigh
         expr: (1 - (node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"})) * 100 > 90
@@ -131,10 +132,9 @@ groups:
           component: memory
         annotations:
           summary: Host memory usage is above 90 percent
-          runbook: Check docker stats and host memory pressure.
 
       - alert: MonitoringTargetDown
-        expr: up{job=~"prometheus|node-exporter|cadvisor|blackbox-http"} == 0
+        expr: up{job=~"prometheus|node-exporter|cadvisor|blackbox-public-http|blackbox-local-caddy"} == 0
         for: 2m
         labels:
           severity: warning
@@ -143,7 +143,6 @@ groups:
           component: scrape
         annotations:
           summary: A core monitoring scrape target is down
-          runbook: Check the monitoring compose stack and Prometheus targets page.
 
       - alert: PostgresExporterDown
         expr: up{job="postgres-exporter"} == 0 or pg_up{job="postgres-exporter"} == 0
@@ -155,7 +154,6 @@ groups:
           component: database
         annotations:
           summary: Shared PostgreSQL exporter or database scrape is down
-          runbook: Check a1-monitoring-postgres-exporter, shared-postgres, and the reading_garden_monitoring role.
 
       - alert: PostgresConnectionsHigh
         expr: sum(pg_stat_database_numbackends{job="postgres-exporter"}) / max(pg_settings_max_connections{job="postgres-exporter"}) > 0.8
@@ -167,7 +165,6 @@ groups:
           component: database
         annotations:
           summary: Shared PostgreSQL connections are above 80 percent of max_connections
-          runbook: Check active app connections, connection pool settings, and long-running sessions.
 
       - alert: PostgresDeadlocksDetected
         expr: increase(pg_stat_database_deadlocks{job="postgres-exporter"}[5m]) > 0
@@ -179,4 +176,3 @@ groups:
           component: database
         annotations:
           summary: Shared PostgreSQL deadlocks were detected
-          runbook: Inspect PostgreSQL logs and recent database write paths.

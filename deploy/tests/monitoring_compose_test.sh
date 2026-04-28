@@ -99,6 +99,30 @@ assert_no_published_ports() {
     fi
 }
 
+assert_service_contains() {
+    local service="$1"
+    local expected="$2"
+
+    if ! printf '%s\n' "$CONFIG_OUTPUT" | awk -v service="$service" -v expected="$expected" '
+        $0 == "  " service ":" {
+            in_service = 1
+            next
+        }
+        /^  [A-Za-z0-9_-]+:$/ && in_service {
+            in_service = 0
+        }
+        in_service && index($0, expected) {
+            found = 1
+        }
+        END {
+            exit found ? 0 : 1
+        }
+    '; then
+        echo "${service} must contain ${expected}" >&2
+        exit 1
+    fi
+}
+
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'prometheus:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'grafana:'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'loki:'
@@ -123,6 +147,7 @@ printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_ROOT_URL: https://nooook-mon
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'NOOOOK_DISCORD_WEBHOOK_URL: https://example.invalid/nooook-discord-webhook'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_DEV_WEBHOOK_URL: https://example.invalid/dev-discord-webhook'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_PROD_WEBHOOK_URL: https://example.invalid/prod-discord-webhook'
+printf '%s\n' "$CONFIG_OUTPUT" | grep -q -- '--web.listen-address=127.0.0.1:9115'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q -- '--web.listen-address=127.0.0.1:9187'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'DATA_SOURCE_URI: 127.0.0.1:15432/postgres?sslmode=disable'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'DATA_SOURCE_USER: reading_garden_monitoring'
@@ -134,7 +159,8 @@ assert_no_published_ports loki
 assert_no_published_ports alloy
 assert_localhost_port node-exporter 9100 9100
 assert_localhost_port cadvisor 18082 8080
-assert_localhost_port blackbox-exporter 9115 9115
+assert_no_published_ports blackbox-exporter
+assert_service_contains blackbox-exporter 'network_mode: host'
 assert_no_published_ports postgres-exporter
 
 if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|discord(app)?\.com/api/webhooks/[0-9]+'; then

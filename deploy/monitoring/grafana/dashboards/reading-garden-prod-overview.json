@@ -18,7 +18,7 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "Prod External Health",
+      "title": "Prod Public Health",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -68,7 +68,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "probe_success{job=\"blackbox-http\",instance=\"https://readinggarden.duckdns.org/api/health\"}",
+          "expr": "probe_success{job=\"blackbox-public-http\",instance=\"https://readinggarden.duckdns.org/api/health\"}",
           "legendFormat": "prod external health"
         }
       ]
