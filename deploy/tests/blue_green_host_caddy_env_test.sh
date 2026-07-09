@@ -10,6 +10,8 @@ required=(
   'HOST_CADDY_SUDO="${HOST_CADDY_SUDO:-sudo}"'
   'HOST_CADDY_RELOAD_CMD="${HOST_CADDY_RELOAD_CMD:-caddy reload --address unix//var/lib/caddy/caddy-admin.sock --config /etc/caddy/Caddyfile --adapter caddyfile}"'
   'fix_caddy_log_permissions'
+  'caddy_group=\$(id -gn caddy)'
+  'chown caddy:\${caddy_group}'
   'ROUTE_RENDERER="${ROUTE_RENDERER:-${APP_DIR}/render-host-caddy-upstream.sh}"'
   'docker compose -f "$COMPOSE_FILE" up --pull never -d app-blue'
   'docker compose -f "$COMPOSE_FILE" --profile green up --pull never -d "app-${STANDBY}"'
@@ -25,6 +27,11 @@ done
 
 if grep -Fq 'docker compose -f "$EDGE_COMPOSE_FILE" exec -T caddy' "$BLUE_GREEN_SCRIPT"; then
     echo "edge container exec must be removed" >&2
+    exit 1
+fi
+
+if grep -Fq 'caddy_group=\\\$(id -gn caddy)' "$BLUE_GREEN_SCRIPT"; then
+    echo "caddy command substitution must not be over-escaped" >&2
     exit 1
 fi
 
