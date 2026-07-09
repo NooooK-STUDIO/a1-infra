@@ -14,6 +14,10 @@ printf 'prod-app-pass\n' > "${TMP_DIR}/stack/secrets/reading_garden_prod_app.pas
 printf 'prod-migrator-pass\n' > "${TMP_DIR}/stack/secrets/reading_garden_prod_migrator.password"
 printf 'dev-app-pass\n' > "${TMP_DIR}/stack/secrets/reading_garden_dev_app.password"
 printf 'dev-migrator-pass\n' > "${TMP_DIR}/stack/secrets/reading_garden_dev_migrator.password"
+printf 'paw-prod-app-pass\n' > "${TMP_DIR}/stack/secrets/pawtogether_prod_app.password"
+printf 'paw-prod-migrator-pass\n' > "${TMP_DIR}/stack/secrets/pawtogether_prod_migrator.password"
+printf 'paw-dev-app-pass\n' > "${TMP_DIR}/stack/secrets/pawtogether_dev_app.password"
+printf 'paw-dev-migrator-pass\n' > "${TMP_DIR}/stack/secrets/pawtogether_dev_migrator.password"
 printf 'exporter-pass\n' > "${TMP_DIR}/stack/secrets/postgres_exporter.password"
 
 cat > "${TMP_DIR}/bin/docker" <<'EOF'
@@ -66,5 +70,7 @@ grep -Fq 'network create reading-garden-shared-backend' "${TMP_DIR}/docker.log"
 grep -Fq "compose -f ${TMP_DIR}/stack/docker-compose.yml up -d" "${TMP_DIR}/docker.log"
 grep -Fq 'inspect --format={{.State.Health.Status}} shared-postgres' "${TMP_DIR}/docker.log"
 grep -Fq 'exec -i -e POSTGRES_EXPORTER_PASSWORD=exporter-pass shared-postgres psql' "${TMP_DIR}/docker.log"
+grep -Fq 'APP_DB_NAME=pawtogether_prod' "${TMP_DIR}/docker.log"
+grep -Fq 'APP_DB_NAME=pawtogether_dev' "${TMP_DIR}/docker.log"
 
 echo "PASS"

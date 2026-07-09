@@ -113,6 +113,8 @@ jobs:
           mkdir -p "$caddy_dir/upstreams"
           printf 'reverse_proxy 127.0.0.1:18080\n' > "$caddy_dir/upstreams/reading-garden-prod.caddy"
           printf 'reverse_proxy 127.0.0.1:18090\n' > "$caddy_dir/upstreams/reading-garden-dev.caddy"
+          printf 'reverse_proxy 127.0.0.1:18110\n' > "$caddy_dir/upstreams/pawtogether-prod.caddy"
+          printf 'reverse_proxy 127.0.0.1:18100\n' > "$caddy_dir/upstreams/pawtogether-dev.caddy"
 
           docker run --rm \
             -v "$caddy_dir:/etc/caddy:ro" \

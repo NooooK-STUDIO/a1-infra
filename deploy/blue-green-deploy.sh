@@ -42,9 +42,9 @@ fix_caddy_log_permissions() {
         if id caddy >/dev/null 2>&1; then
             caddy_group=\\\$(id -gn caddy)
             install -d -m 755 '$HOST_CADDY_LOG_DIR'
-            touch '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log'
-            chown caddy:\\\${caddy_group} '$HOST_CADDY_LOG_DIR' '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log'
-            chmod 644 '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log'
+            touch '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log' '$HOST_CADDY_LOG_DIR/pawtogether-dev-access.log' '$HOST_CADDY_LOG_DIR/pawtogether-prod-access.log'
+            chown caddy:\\\${caddy_group} '$HOST_CADDY_LOG_DIR' '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log' '$HOST_CADDY_LOG_DIR/pawtogether-dev-access.log' '$HOST_CADDY_LOG_DIR/pawtogether-prod-access.log'
+            chmod 644 '$HOST_CADDY_LOG_DIR/reading-garden-dev-access.log' '$HOST_CADDY_LOG_DIR/reading-garden-prod-access.log' '$HOST_CADDY_LOG_DIR/pawtogether-dev-access.log' '$HOST_CADDY_LOG_DIR/pawtogether-prod-access.log'
         fi
     "
 }

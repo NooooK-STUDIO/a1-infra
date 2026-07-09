@@ -12,6 +12,7 @@ fi
 mkdir -p \
     "$APP_DIR" \
     "$APP_DIR/backups" \
+    "$APP_DIR/data/files" \
     "$APP_DIR/data/images/multipart-temp" \
     "$APP_DIR/secrets"
 

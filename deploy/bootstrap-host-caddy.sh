@@ -39,6 +39,8 @@ install -d -m 755 "${HOST_CADDY_LOG_DIR}"
 touch \
     "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
     "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log" \
+    "${HOST_CADDY_LOG_DIR}/pawtogether-dev-access.log" \
+    "${HOST_CADDY_LOG_DIR}/pawtogether-prod-access.log" \
     "${HOST_CADDY_LOG_DIR}/nooook-monitoring-access.log"
 if id caddy >/dev/null 2>&1; then
     caddy_group="$(id -gn caddy)"
@@ -46,10 +48,14 @@ if id caddy >/dev/null 2>&1; then
         "${HOST_CADDY_LOG_DIR}" \
         "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
         "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log" \
+        "${HOST_CADDY_LOG_DIR}/pawtogether-dev-access.log" \
+        "${HOST_CADDY_LOG_DIR}/pawtogether-prod-access.log" \
         "${HOST_CADDY_LOG_DIR}/nooook-monitoring-access.log"
     chmod 644 \
         "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
         "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log" \
+        "${HOST_CADDY_LOG_DIR}/pawtogether-dev-access.log" \
+        "${HOST_CADDY_LOG_DIR}/pawtogether-prod-access.log" \
         "${HOST_CADDY_LOG_DIR}/nooook-monitoring-access.log"
 fi
 
@@ -68,6 +74,21 @@ if [[ -d "${HOST_CADDY_STAGE_DIR}/sites" ]]; then
             install -m 644 "$file_path" "${HOST_CADDY_CONFIG_DIR}/sites/$(basename "$file_path")"
         done
 fi
+
+install_default_upstream() {
+    local name="$1"
+    local port="$2"
+    local target="${HOST_CADDY_CONFIG_DIR}/upstreams/${name}.caddy"
+
+    if [[ ! -f "$target" ]]; then
+        printf 'reverse_proxy 127.0.0.1:%s\n' "$port" > "$target"
+    fi
+}
+
+install_default_upstream reading-garden-dev 18090
+install_default_upstream reading-garden-prod 18080
+install_default_upstream pawtogether-dev 18100
+install_default_upstream pawtogether-prod 18110
 
 if [[ -f "${HOST_CADDY_SYSTEMD_OVERRIDE_SOURCE}" ]]; then
     install -d -m 755 "${HOST_CADDY_SYSTEMD_OVERRIDE_DIR}"

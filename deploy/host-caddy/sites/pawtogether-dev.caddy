@@ -1,0 +1,13 @@
+pawtogether-dev.duckdns.org {
+    log pawtogether_dev {
+        output file /var/log/caddy/pawtogether-dev-access.log {
+            roll_size 10MiB
+            roll_keep 5
+            roll_keep_for 72h
+        }
+        format json
+    }
+
+    import common_proxy
+    import /etc/caddy/upstreams/pawtogether-dev.caddy
+}

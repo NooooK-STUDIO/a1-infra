@@ -13,12 +13,12 @@ services:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
     volumes:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
-      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:/opt/reading-garden/data
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:${APP_DATA_MOUNT_TARGET:-/opt/reading-garden/data}
     networks:
       - default
       - shared-backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080${APP_HEALTH_PATH:-/api/health}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,12 +38,12 @@ services:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
     volumes:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
-      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:/opt/reading-garden/data
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:${APP_DATA_MOUNT_TARGET:-/opt/reading-garden/data}
     networks:
       - default
       - shared-backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080${APP_HEALTH_PATH:-/api/health}"]
       interval: 10s
       timeout: 5s
       retries: 5
