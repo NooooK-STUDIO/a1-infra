@@ -34,7 +34,7 @@ load_optional_secret_env() {
         return 0
     fi
 
-    if [[ -f "$secret_path" ]]; then
+    if [[ -r "$secret_path" ]]; then
         export "$var_name=$(tr -d '\r\n' < "$secret_path")"
     fi
 }
