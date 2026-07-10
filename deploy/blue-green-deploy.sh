@@ -9,6 +9,7 @@ TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-120}"
 SMOKE_BASE_URL="${SMOKE_BASE_URL:-https://readinggarden.duckdns.org}"
 APP_CONTAINER_PREFIX="${APP_CONTAINER_PREFIX:-reading-garden}"
 APP_VOLUME_PREFIX="${APP_VOLUME_PREFIX:-$APP_CONTAINER_PREFIX}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-$APP_CONTAINER_PREFIX}"
 APP_HOST_DIR="${APP_HOST_DIR:-$APP_DIR}"
 CUTOVER_DRAIN_SECONDS="${CUTOVER_DRAIN_SECONDS:-30}"
 APP_STOP_TIMEOUT_SECONDS="${APP_STOP_TIMEOUT_SECONDS:-35}"
@@ -133,16 +134,54 @@ running_container_exists() {
     docker ps --format '{{.Names}}' | grep -qx "$name"
 }
 
+container_compose_project() {
+    local name="$1"
+
+    docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$name" 2>/dev/null || true
+}
+
+remove_foreign_container() {
+    local name="$1"
+    local project
+
+    if ! docker inspect "$name" >/dev/null 2>&1; then
+        return
+    fi
+
+    project="$(container_compose_project "$name")"
+    if [[ -n "$project" && "$project" != "$COMPOSE_PROJECT_NAME" ]]; then
+        echo "=== Removing legacy container $name from Compose project $project ==="
+        docker rm -f "$name"
+    fi
+}
+
+stop_active_container() {
+    local name="$1"
+    local project
+
+    if ! docker inspect "$name" >/dev/null 2>&1; then
+        return
+    fi
+
+    project="$(container_compose_project "$name")"
+    docker stop -t "$APP_STOP_TIMEOUT_SECONDS" "$name"
+    if [[ -n "$project" && "$project" != "$COMPOSE_PROJECT_NAME" ]]; then
+        docker rm "$name"
+    fi
+}
+
 cd "$APP_DIR"
 
 export IMAGE_REF="${IMAGE_REF:?IMAGE_REF is required}"
 export APP_HOST_DIR
 export APP_CONTAINER_PREFIX
 export APP_VOLUME_PREFIX
+export COMPOSE_PROJECT_NAME
 
 if ! running_container_exists "${APP_CONTAINER_PREFIX}-blue" && ! running_container_exists "${APP_CONTAINER_PREFIX}-green"; then
     echo "=== First deployment: starting blue ==="
 
+    remove_foreign_container "${APP_CONTAINER_PREFIX}-blue"
     docker compose -f "$COMPOSE_FILE" pull
     docker compose -f "$COMPOSE_FILE" up --pull never -d app-blue
 
@@ -181,6 +220,7 @@ esac
 
 echo "=== Current active: $ACTIVE, deploying to: $STANDBY ==="
 
+remove_foreign_container "${APP_CONTAINER_PREFIX}-${STANDBY}"
 docker compose -f "$COMPOSE_FILE" pull "app-${STANDBY}"
 
 if [[ "$STANDBY" = "green" ]]; then
@@ -219,7 +259,7 @@ fi
 echo "=== Draining app-${ACTIVE} for ${CUTOVER_DRAIN_SECONDS}s ==="
 sleep "$CUTOVER_DRAIN_SECONDS"
 
-docker compose -f "$COMPOSE_FILE" stop -t "$APP_STOP_TIMEOUT_SECONDS" "app-${ACTIVE}"
+stop_active_container "${APP_CONTAINER_PREFIX}-${ACTIVE}"
 echo "=== Deployment complete: app-${STANDBY} is now active ==="
 
 docker system prune -f || true
