@@ -163,6 +163,12 @@ assert_no_published_ports blackbox-exporter
 assert_service_contains blackbox-exporter 'network_mode: host'
 assert_no_published_ports postgres-exporter
 
+for service in prometheus grafana loki alloy node-exporter cadvisor blackbox-exporter postgres-exporter; do
+    assert_service_contains "$service" 'driver: json-file'
+    assert_service_contains "$service" 'max-file: "3"'
+    assert_service_contains "$service" 'max-size: 10m'
+done
+
 if printf '%s\n' "$CONFIG_OUTPUT" | rg -q 'alertmanager:|discord(app)?\.com/api/webhooks/[0-9]+'; then
     echo "deferred services and real Discord webhook URLs must not be present" >&2
     exit 1

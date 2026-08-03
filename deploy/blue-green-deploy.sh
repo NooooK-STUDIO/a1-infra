@@ -200,7 +200,8 @@ if ! running_container_exists "${APP_CONTAINER_PREFIX}-blue" && ! running_contai
 
     TIMEOUT_SECONDS=30 "${APP_DIR}/cutover-smoke-check.sh" "${SMOKE_BASE_URL}"
     echo "=== First deployment complete: app-blue is active ==="
-    docker system prune -f || true
+    # ponytail: host-wide cleanup; use a serialized maintenance job if apps start deploying concurrently.
+    docker image prune -a -f --filter "until=168h" || true
     exit 0
 fi
 
@@ -262,4 +263,5 @@ sleep "$CUTOVER_DRAIN_SECONDS"
 stop_active_container "${APP_CONTAINER_PREFIX}-${ACTIVE}"
 echo "=== Deployment complete: app-${STANDBY} is now active ==="
 
-docker system prune -f || true
+# ponytail: host-wide cleanup; use a serialized maintenance job if apps start deploying concurrently.
+docker image prune -a -f --filter "until=168h" || true
