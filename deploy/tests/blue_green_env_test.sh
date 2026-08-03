@@ -39,6 +39,14 @@ assert_contains "$BLUE_GREEN_SCRIPT" 'sleep "$CUTOVER_DRAIN_SECONDS"'
 assert_contains "$BLUE_GREEN_SCRIPT" 'remove_foreign_container "${APP_CONTAINER_PREFIX}-${STANDBY}"'
 assert_contains "$BLUE_GREEN_SCRIPT" 'stop_active_container "${APP_CONTAINER_PREFIX}-${ACTIVE}"'
 assert_contains "$BLUE_GREEN_SCRIPT" 'ROUTE_RENDERER="${ROUTE_RENDERER:-${APP_DIR}/render-host-caddy-upstream.sh}"'
+if [[ "$(grep -Fc 'docker image prune -a -f --filter "until=168h" || true' "$BLUE_GREEN_SCRIPT")" -ne 2 ]]; then
+    echo "blue-green deploy must prune unused images older than seven days after successful deployments" >&2
+    exit 1
+fi
+if grep -Fq 'docker system prune' "$BLUE_GREEN_SCRIPT"; then
+    echo "blue-green deploy must not prune unrelated Docker resources" >&2
+    exit 1
+fi
 assert_contains "$BOOTSTRAP_SCRIPT" 'REMOTE_APP_DIR:-${APP_DIR:-}'
 assert_contains "$BOOTSTRAP_SCRIPT" 'SHARED_POSTGRES_HOST="${SHARED_POSTGRES_HOST:-shared-postgres}"'
 assert_contains "$BOOTSTRAP_SCRIPT" 'SHARED_POSTGRES_PORT="${SHARED_POSTGRES_PORT:-5432}"'
