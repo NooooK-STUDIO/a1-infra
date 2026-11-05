@@ -21,13 +21,31 @@ cat > "$tmp/bin/ip" <<'MOCK'
 printf '3: %s: <BROADCAST> mtu 1500 bridge forward_delay 1500\n' "$6"
 MOCK
 cat > "$tmp/bin/iptables" <<'MOCK'
-#!/usr/bin/env bash
-printf '%s\n' "$*" >> "$TEST_LOG"
-case "$1" in
-  -C) [ -e "$TEST_LIVE" ] ;;
-  -I) [ "$2 $3" = 'INPUT 1' ] && [ "${TEST_INSERT_FAIL:-0}" != 1 ] && touch "$TEST_LIVE" ;;
-  *) exit 1 ;;
-esac
+#!/usr/bin/env python3
+import os, sys
+args = sys.argv[1:]
+with open(os.environ['TEST_LOG'], 'a') as log:
+    print(' '.join(args), file=log)
+path = os.environ['TEST_LIVE']
+with open(path) as f:
+    rules = f.read().splitlines()
+if args == ['-S', 'INPUT']:
+    print('-P INPUT DROP')
+    print('\n'.join(rules))
+elif args[:3] == ['-I', 'INPUT', '1']:
+    if os.environ.get('TEST_INSERT_FAIL') == '1':
+        sys.exit(1)
+    opts = dict(zip(args[3::2], args[4::2]))
+    if os.environ.get('TEST_CONCURRENT_INSERT') == '1':
+        rules.insert(0, '-A INPUT -s 10.2.0.0/16 -j ACCEPT')
+    rules.insert(0, f"-A INPUT -s {opts['-s']} -d {opts['-d']} -i {opts['-i']} -p tcp -m tcp --dport 4318 -j ACCEPT")
+elif args[:2] == ['-D', 'INPUT'] and len(args) == 3:
+    del rules[int(args[2]) - 1]
+else:
+    sys.exit(1)
+if args[0] != '-S':
+    with open(path, 'w') as f:
+        f.write('\n'.join(rules) + ('\n' if rules else ''))
 MOCK
 cat > "$tmp/bin/iptables-restore" <<'MOCK'
 #!/usr/bin/env bash
@@ -37,6 +55,13 @@ cat > "$TEST_CANDIDATE"
 MOCK
 chmod +x "$tmp/bin/"*
 export PATH="$tmp/bin:$PATH" IPTABLES_RULES_FILE="$tmp/rules.v4" TEST_LOG="$tmp/log" TEST_LIVE="$tmp/live" TEST_CANDIDATE="$tmp/candidate"
+: > "$TEST_LOG"
+cat > "$TEST_LIVE" <<'RULES'
+-A INPUT -s 10.1.0.0/16 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A INPUT -s 172.24.0.0/16 -d 172.24.0.1/32 -i br-abcdef123456 -p tcp -m tcp --dport 4318 -j ACCEPT
+-A INPUT -s 172.24.0.0/16 -d 172.24.0.1/32 -i br-abcdef123456 -p tcp -m tcp --dport 4318 -j ACCEPT
+RULES
 cat > "$IPTABLES_RULES_FILE" <<'RULES'
 # preserve header
 *filter
@@ -62,10 +87,21 @@ assert actual == original.replace(b'-A INPUT ', rule + b'-A INPUT ', 1)
 PY
 [ "$(stat -c %a "$IPTABLES_RULES_FILE" 2>/dev/null || stat -f %Lp "$IPTABLES_RULES_FILE")" = 640 ]
 grep -Fx -- '-I INPUT 1 -i br-abcdef123456 -s 172.24.0.0/16 -d 172.24.0.1/32 -p tcp --dport 4318 -j ACCEPT' "$TEST_LOG" >/dev/null
+cat > "$tmp/live-expected" <<'RULES'
+-A INPUT -s 172.24.0.0/16 -d 172.24.0.1/32 -i br-abcdef123456 -p tcp -m tcp --dport 4318 -j ACCEPT
+-A INPUT -s 10.1.0.0/16 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A INPUT -s 172.24.0.0/16 -d 172.24.0.1/32 -i br-abcdef123456 -p tcp -m tcp --dport 4318 -j ACCEPT
+-A INPUT -s 172.24.0.0/16 -d 172.24.0.1/32 -i br-abcdef123456 -p tcp -m tcp --dport 4318 -j ACCEPT
+RULES
+cmp "$tmp/live-expected" "$TEST_LIVE"
 cp "$IPTABLES_RULES_FILE" "$tmp/expected"
+cp "$TEST_LOG" "$tmp/log-after-first"
 "$script"
 cmp "$tmp/expected" "$IPTABLES_RULES_FILE"
+cmp "$tmp/live-expected" "$TEST_LIVE"
 [ "$(grep -c '^-I ' "$TEST_LOG")" = 1 ]
+if grep -q '^-D ' "$TEST_LOG"; then echo 'Unrelated rules may shift: never delete by saved index' >&2; exit 1; fi
 for scenario in public bad_gateway restore nonroot malformed missing; do
   cp "$tmp/original" "$IPTABLES_RULES_FILE"
   case "$scenario" in
@@ -85,9 +121,18 @@ for scenario in public bad_gateway restore nonroot malformed missing; do
 done
 # Insertion failure must leave the persisted file unchanged.
 cp "$tmp/original" "$IPTABLES_RULES_FILE"
-rm "$TEST_LIVE"
+tail -n +2 "$tmp/live-expected" > "$TEST_LIVE"
+head -n 1 "$tmp/live-expected" >> "$TEST_LIVE"
+cp "$TEST_LIVE" "$tmp/live-before"
 if TEST_INSERT_FAIL=1 "$script" > "$tmp/output" 2>&1; then echo 'Insertion failure accepted' >&2; exit 1; fi
 cmp "$tmp/original" "$IPTABLES_RULES_FILE"
+cmp "$tmp/live-before" "$TEST_LIVE"
+# A competing insertion must not make us delete an unrelated REJECT by its old index.
+TEST_CONCURRENT_INSERT=1 "$script"
+grep -Fx -- '-A INPUT -j REJECT --reject-with icmp-host-prohibited' "$TEST_LIVE" >/dev/null
+grep -Fx -- '-A INPUT -s 10.2.0.0/16 -j ACCEPT' "$TEST_LIVE" >/dev/null
+[ "$(head -n 1 "$TEST_LIVE")" = "$(head -n 1 "$tmp/live-expected")" ]
+if grep -q '^-D ' "$TEST_LOG"; then echo 'Concurrent insertion triggered deletion' >&2; exit 1; fi
 # Docker's explicit bridge option takes precedence over the derived bridge name.
 TEST_OPTIONS='{"com.docker.network.bridge.name":"shared-br"}' "$script"
 grep -Fx -- '-A INPUT -i shared-br -s 172.24.0.0/16 -d 172.24.0.1/32 -p tcp --dport 4318 -j ACCEPT' "$IPTABLES_RULES_FILE" >/dev/null

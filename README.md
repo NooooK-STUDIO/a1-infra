@@ -29,9 +29,16 @@ production alerts use `pawtogether-discord-prod`, and shared infrastructure aler
 use the default `nooook-discord` receiver. Set `GRAFANA_DISCORD_PAW_WEBHOOK_URL` in
 the host's monitoring `.env` before deploying; all three webhook values remain
 host-local secrets. Each receiver sends both firing and resolved notifications.
+Prometheus keeps firing alerts active for two minutes after recovery so Grafana's
+60-second polling and 30-second notification wait do not miss brief incidents.
+Recovery notifications are delayed by that hold and the normal notification schedule.
 Application overviews show only that application's health, traffic, runtime resources,
 and connection pool. Overview links retain the selected time range when moving
 between applications, shared infrastructure, PostgreSQL, and application logs.
+Both application slots export HTTP request histograms through their Compose
+environment settings, providing the buckets needed by the p95 response-time panels.
+Copy the updated app Compose template and redeploy the current application image
+to enable this on existing containers; monitoring verification checks for buckets.
 Each application log dashboard shows errors, application output, and its own HTTP
 access logs without duplicate application panels. Caddy service events belong to
 the shared log dashboard. Log dashboard links retain the selected time range when

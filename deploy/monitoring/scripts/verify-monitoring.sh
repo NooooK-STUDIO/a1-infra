@@ -24,15 +24,20 @@ if [ "${#EXPECTED_ALERT_RULES[@]}" -eq 0 ]; then
   exit 1
 fi
 
-read_env_file() {
-  local key="$1"
-
-  awk -F= -v key="$key" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' "$ENV_FILE"
+read_grafana_setting() {
+  # Compose config escapes dollars for re-use as Compose input; the suffix preserves trailing newlines in command substitution.
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" config --format json 2>/dev/null |
+    python3 -c 'import json, sys; sys.stdout.write(json.load(sys.stdin)["services"]["grafana"]["environment"][sys.argv[1]].replace("$$", "$") + ".")' "$1" 2>/dev/null
 }
 
-GRAFANA_ADMIN_USER="${GRAFANA_ADMIN_USER:-$(read_env_file GRAFANA_ADMIN_USER)}"
-GRAFANA_ADMIN_USER="${GRAFANA_ADMIN_USER:-admin}"
-GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-$(read_env_file GRAFANA_ADMIN_PASSWORD)}"
+if [ -z "${GRAFANA_ADMIN_USER:-}" ]; then
+  GRAFANA_ADMIN_USER="$(read_grafana_setting GF_SECURITY_ADMIN_USER)" || { echo "Could not read Grafana settings from Compose config" >&2; exit 1; }
+  GRAFANA_ADMIN_USER="${GRAFANA_ADMIN_USER%.}"
+fi
+if [ -z "${GRAFANA_ADMIN_PASSWORD:-}" ]; then
+  GRAFANA_ADMIN_PASSWORD="$(read_grafana_setting GF_SECURITY_ADMIN_PASSWORD)" || { echo "Could not read Grafana settings from Compose config" >&2; exit 1; }
+  GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD%.}"
+fi
 
 if [ -z "$GRAFANA_ADMIN_PASSWORD" ]; then
   echo "GRAFANA_ADMIN_PASSWORD is required in the environment or ${ENV_FILE}" >&2
@@ -256,6 +261,8 @@ wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-prod-app"}) > 0' 'reading-garden-prod-app'
 assert_prometheus_query_has_result 'sum(up{job="pawtogether-prod-app"}) > 0' 'pawtogether-prod-app'
+assert_prometheus_query_has_result 'count(http_server_requests_seconds_bucket{job="reading-garden-prod-app"}) > 0' 'reading-garden-prod-app HTTP histogram buckets'
+assert_prometheus_query_has_result 'count(http_server_requests_seconds_bucket{job="pawtogether-prod-app"}) > 0' 'pawtogether-prod-app HTTP histogram buckets'
 assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://pawtogether.duckdns.org/api/health"} == 1' 'PawTogether public health'
 assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",instance="pawtogether.duckdns.org"} == 1' 'PawTogether local Caddy health'
 for service in reading-garden pawtogether; do
