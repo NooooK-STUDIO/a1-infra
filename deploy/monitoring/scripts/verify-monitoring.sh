@@ -288,13 +288,22 @@ assert all(r.get("health") == "ok" for r in rules), "Grafana rule evaluation fai
   sleep 2
 done
 
-for dashboard in pawtogether-prod-overview pawtogether-logs; do
+while IFS='|' read -r dashboard folder title; do
   curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
     "${GRAFANA_URL}/api/dashboards/uid/${dashboard}" | python3 -c '
 import json, sys
-assert json.load(sys.stdin)["dashboard"]["panels"], "Missing dashboard panels"
-'
-done
+response = json.load(sys.stdin)
+assert response["dashboard"]["panels"], "Missing dashboard panels"
+assert response["meta"]["folderTitle"] == sys.argv[1], "Incorrect dashboard folder"
+assert response["dashboard"]["title"] == sys.argv[2], "Incorrect dashboard title"
+' "$folder" "$title"
+done <<'DASHBOARDS'
+reading-garden-prod-overview|ReadingGarden|ReadingGarden Prod Overview
+reading-garden-logs|ReadingGarden|ReadingGarden Logs
+pawtogether-prod-overview|PawTogether|PawTogether Prod Overview
+pawtogether-logs|PawTogether|PawTogether Logs
+reading-garden-postgres-overview|A1 Shared|Shared PostgreSQL Overview
+DASHBOARDS
 
 for service in reading-garden-kotlin pawtogether; do
   assert_loki_query_has_result "{source=\"caddy_access\",service=\"${service}\"}" "${service} access logs"

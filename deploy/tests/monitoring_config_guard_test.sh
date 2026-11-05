@@ -11,14 +11,14 @@ test -f deploy/monitoring/grafana/provisioning/dashboards/dashboards.yml
 test -f deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 test -f deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 test -f deploy/monitoring/grafana/provisioning/alerting/notification-templates.yml
-test -f deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'deleteRules:' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'uid: grafana-prod-external-health' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'uid: grafana-dev-external-health' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-test -f deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-test -f deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-test -f deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
+test -f deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'deleteRules:' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'uid: grafana-prod-external-health' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'uid: grafana-dev-external-health' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+test -f deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+test -f deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+test -f deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 test -x deploy/monitoring/scripts/bootstrap-monitoring.sh
 test -x deploy/monitoring/scripts/verify-monitoring.sh
 test -x deploy/monitoring/scripts/check-alerts.sh
@@ -59,18 +59,18 @@ grep -Fq 'GF_SERVER_HTTP_ADDR: 127.0.0.1' deploy/monitoring/docker-compose.monit
 grep -Fq 'uid: prometheus' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 grep -Fq 'uid: loki' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
 grep -Fq 'url: http://127.0.0.1:3100' deploy/monitoring/grafana/provisioning/datasources/datasources.yml
-grep -Fq 'reading-garden-prod-overview' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq 'reading-garden-postgres-overview' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
-grep -Fq 'ReadingGarden Postgres Overview' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
-grep -Fq 'Postgres Exporter Up' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
-grep -Fq 'Postgres Connections Percent' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
-grep -Fq 'pg_up{job=\"postgres-exporter\"}' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
-grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq '{source=\"docker\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq '{container=~\"reading-garden-prod-.*\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq '{source=\"caddy_access\",env=\"prod\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq 'reading-garden-prod-overview' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq 'reading-garden-postgres-overview' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'Shared PostgreSQL Overview' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'Postgres Exporter Up' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'Postgres Connections Percent' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'pg_up{job=\"postgres-exporter\"}' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq '{source=\"docker\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq '{container=~\"reading-garden-prod-.*\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq '{source=\"caddy_access\",env=\"prod\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq 'loki.source.docker "containers"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'local.file_match "caddy_access"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'loki.source.file "caddy_access"' deploy/monitoring/alloy/config.alloy
@@ -80,7 +80,7 @@ grep -Fq 'action        = "keep"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'regex         = "/(reading-garden|pawtogether)-prod-.*"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'loki.relabel "app_containers"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'regex         = "reading-garden-prod-.*"' deploy/monitoring/alloy/config.alloy
-if rg -n 'a1-monitoring-loki|shared-postgres' deploy/monitoring/grafana/dashboards/reading-garden-logs.json deploy/monitoring/alloy/config.alloy; then
+if rg -n 'a1-monitoring-loki|shared-postgres' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json deploy/monitoring/alloy/config.alloy; then
     echo "log collection must avoid monitoring self-log loops and shared-postgres noise" >&2
     exit 1
 fi
@@ -88,19 +88,19 @@ grep -Fq 'matches       = "SYSLOG_IDENTIFIER=caddy"' deploy/monitoring/alloy/con
 grep -Fq 'path          = "/var/log/journal"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'retention_period: 72h' deploy/monitoring/loki/loki.yml
 grep -Fq 'allow_structured_metadata: false' deploy/monitoring/loki/loki.yml
-grep -Fq '"from": "now-6h"' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq 'Prod Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Prod Max Latency' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Prod 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Prod p95 Latency' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Prod Active Alerts' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Prod Request Rate' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"reading-garden-prod-app\"}[5m])))' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'sum(ALERTS{env=\"prod\",service=\"reading-garden-kotlin\",alertstate=\"firing\"}) or vector(0)' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Hikari Active Connections' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'Process Uptime' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq 'jvm_threads_live_threads{job=\"reading-garden-prod-app\"}' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq '"from": "now-6h"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq 'Prod Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Prod Max Latency' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Prod 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Prod p95 Latency' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Prod Active Alerts' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Prod Request Rate' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"reading-garden-prod-app\"}[5m])))' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'sum(ALERTS{env=\"prod\",service=\"reading-garden-kotlin\",alertstate=\"firing\"}) or vector(0)' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Hikari Active Connections' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Process Uptime' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'jvm_threads_live_threads{job=\"reading-garden-prod-app\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 grep -Fq 'job_name: reading-garden-prod-app' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:19080' deploy/monitoring/prometheus/prometheus.yml
 grep -Fq '127.0.0.1:19081' deploy/monitoring/prometheus/prometheus.yml
@@ -155,14 +155,14 @@ fi
 grep -Fq 'url: $GRAFANA_DISCORD_PROD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'receiver: reading-garden-discord-prod' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 grep -Fq 'receiver: nooook-discord' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
-grep -Fq 'GrafanaProdAppErrorLogsDetected' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'for: 1m' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq '{container=~"reading-garden-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)"' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'logs_dashboard: https://nooook-monitoring.duckdns.org/d/reading-garden-logs?orgId=1&from=now-30m&to=now' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'logs_query: '\''{container=~"reading-garden-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)"' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -Fq 'signal: logs' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml
-grep -A55 'uid: grafana-prod-app-error-logs' deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml | grep -Fq 'for: 1m'
+grep -Fq 'GrafanaProdAppErrorLogsDetected' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'for: 1m' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq '{container=~"reading-garden-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)"' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'logs_dashboard: https://nooook-monitoring.duckdns.org/d/reading-garden-logs?orgId=1&from=now-30m&to=now' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'logs_query: '\''{container=~"reading-garden-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)"' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -Fq 'signal: logs' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
+grep -A55 'uid: grafana-prod-app-error-logs' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml | grep -Fq 'for: 1m'
 grep -Fq 'NOOOOK_DISCORD_WEBHOOK_URL=' deploy/monitoring/.env.example
 grep -Fq 'GRAFANA_DISCORD_PROD_WEBHOOK_URL=' deploy/monitoring/.env.example
 grep -Fq 'POSTGRES_EXPORTER_PASSWORD=' deploy/monitoring/.env.example
@@ -201,10 +201,10 @@ grep -Fq 'Prod Active Alerts' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'App Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod App Logs' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq '|~ \"(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\"' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq '!~ \"(?i)(no error|error page|error dispatch)\"' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
-grep -Fq 'FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)' deploy/monitoring/grafana/dashboards/reading-garden-logs.json
+grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq '|~ \"(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq '!~ \"(?i)(no error|error page|error dispatch)\"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq 'FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq 'Caddy Systemd Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod Caddy Access Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/v1/alerts' deploy/monitoring/scripts/check-alerts.sh
@@ -212,15 +212,15 @@ grep -Fq '/api/v1/rules' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'python3' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'Active alerts' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'Expected alert rules' deploy/monitoring/scripts/check-alerts.sh
-grep -Fq '"legendFormat": "{{datname}}"' deploy/monitoring/grafana/dashboards/reading-garden-postgres-overview.json
+grep -Fq '"legendFormat": "{{datname}}"' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 
 if rg -n 'RUNBOOK|SECURITY\\.md|runbook_url|^[[:space:]]*runbook:' deploy/monitoring; then
     echo "runbook/security docs and Grafana runbook links must not remain" >&2
     exit 1
 fi
-grep -Fq '"legendFormat": "{{status}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq '"legendFormat": "{{id}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
-grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/reading-garden-prod-overview.json
+grep -Fq '"legendFormat": "{{status}}"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq '"legendFormat": "{{id}}"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 if rg -n 'PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "monitoring verification must not require prod live docs" >&2
     exit 1

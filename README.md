@@ -11,6 +11,18 @@ Infrastructure and deployment assets for services running on OCI A1.
 - `deploy/monitoring/`: Monitoring for ReadingGarden, PawTogether, and shared services using Prometheus, Grafana, Loki, Alloy, and exporters. Grafana forwards firing Prometheus alerts to the existing Discord receivers.
 - `deploy/tests/`: shell tests for deployment configuration.
 
+## Grafana organization
+
+Dashboards and Grafana alert rules are grouped by ownership:
+
+- `A1 Shared`: Shared PostgreSQL Overview and the Prometheus alert forwarder.
+- `ReadingGarden`: production overview, application logs, and application log alerts.
+- `PawTogether`: production overview, application logs, and application log alerts.
+
+Dashboard and alert UIDs stay unchanged so existing links keep working. The shared
+PostgreSQL dashboard retains the legacy `reading-garden-postgres-overview` UID.
+Notification routing continues to use service/environment labels.
+
 ## Verification
 
 Run deployment configuration tests from the repository root:

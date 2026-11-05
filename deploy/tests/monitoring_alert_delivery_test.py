@@ -82,8 +82,9 @@ def main():
         data_dir.mkdir(mode=0o755)
         os.chmod(tmp, 0o755)
         # Keep the forwarder verbatim, excluding unrelated Loki rules.
-        rules = (ROOT / 'alerting/reading-garden-alerts.yml').read_text()
-        rules = rules.split('  - uid: grafana-prod-app-error-logs')[0].replace('interval: 60s', 'interval: 10s')
+        rules = (ROOT / 'alerting/monitoring-alerts.yml').read_text()
+        header, groups = rules.split('groups:\n', 1)
+        rules = (header + 'groups:\n' + groups.split('\n- orgId:', 1)[0]).replace('interval: 60s', 'interval: 10s')
         (alert_dir / 'rules.yml').write_text(rules)
         for file in ('notification-policies.yml', 'notification-templates.yml', 'contact-points.yml'):
             content = (ROOT / 'alerting' / file).read_text()

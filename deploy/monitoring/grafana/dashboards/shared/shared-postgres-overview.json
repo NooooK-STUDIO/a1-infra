@@ -562,7 +562,7 @@
   "refresh": "30s",
   "schemaVersion": 41,
   "tags": [
-    "reading-garden",
+    "shared",
     "postgres",
     "infra"
   ],
@@ -575,7 +575,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "ReadingGarden Postgres Overview",
+  "title": "Shared PostgreSQL Overview",
   "uid": "reading-garden-postgres-overview",
   "version": 1
 }

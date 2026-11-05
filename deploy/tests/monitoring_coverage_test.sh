@@ -23,7 +23,7 @@ apps.each do |project, (service, targets, hostname)|
   rules = YAML.load_file("#{root}/prometheus/rules/#{project}-prod.yml").fetch('groups').first.fetch('rules')
   assert(rules.size == 6 && rules.all? { |r| r['labels']['service'] == service }, "#{project} rules")
   assert(rules[0]['expr'].include?('or vector(0)') && rules[1..2].all? { |r| r['expr'].include?("service=\"#{service}\"") && r['expr'].include?('absent(') }, "#{project} absent and probe isolation")
-  dash = JSON.parse(File.read("#{root}/grafana/dashboards/#{project}-logs.json"))
+  dash = JSON.parse(File.read("#{root}/grafana/dashboards/#{project}/#{project}-logs.json"))
   assert(dash['panels'].to_s.include?(service), "#{project} dashboard labels")
 end
 %w[alloy loki grafana].zip(%w[12345 3100 3000]).each { |name, port| assert(jobs.fetch(name)['static_configs'][0]['targets'] == ["127.0.0.1:#{port}"], "#{name} scrape") }
@@ -58,7 +58,7 @@ shared = YAML.load_file("#{root}/prometheus/rules/shared-infra.yml")['groups'][0
 assert(shared.any? { |r| r['alert'] == 'ContainerMetricsMissing' && r['expr'].include?('unless on() container_last_seen') }, 'cAdvisor missing container data')
 core = shared.find { |r| r['alert'] == 'MonitoringTargetDown' }['expr']
 assert(%w[alloy loki grafana].all? { |x| core.include?("absent(up{job=\"#{x}\"})") } && shared.any? { |r| r['alert'] == 'AlloyLogDeliveryDropped' }, 'monitoring availability')
-a = YAML.load_file("#{root}/grafana/provisioning/alerting/reading-garden-alerts.yml")
+a = YAML.load_file("#{root}/grafana/provisioning/alerting/monitoring-alerts.yml")
 rules = a.fetch('groups').flat_map { |g| g.fetch('rules') }
 forward = rules.find { |r| r['uid'] == 'prometheus-alert-forwarder' }
 assert(rules.size == 3 && forward['noDataState'] == 'OK' && forward['execErrState'] == 'Alerting' && forward['data'][0]['model']['expr'].include?('label_replace(ALERTS{alertstate="firing"}, "source_alert", "$1", "alertname"'), 'forwarder')
@@ -67,7 +67,7 @@ assert(rules.select { |r| r['uid'].include?('app-error-logs') }.map { |r| r['lab
 policy = YAML.load_file("#{root}/grafana/provisioning/alerting/notification-policies.yml")['policies'][0]
 assert(policy['receiver'] == 'nooook-discord' && policy['routes'].size == 1 && policy['routes'][0]['receiver'] == 'reading-garden-discord-prod' && policy['routes'][0]['object_matchers'].include?(['service', '=', 'reading-garden-kotlin']) && policy['routes'][0]['object_matchers'].include?(['env', '=', 'prod']) && policy['group_by'].include?('source_alert'), 'routing')
 assert(File.read("#{root}/grafana/provisioning/alerting/notification-templates.yml").scan('source_alert').size >= 2, 'notification source name')
-assert(File.read("#{root}/grafana/dashboards/reading-garden-postgres-overview.json").include?('pawtogether_prod'), 'database dashboard')
+assert(File.read("#{root}/grafana/dashboards/shared/shared-postgres-overview.json").include?('pawtogether_prod'), 'database dashboard')
 puts 'Monitoring coverage configuration checks passed'
 RUBY
 

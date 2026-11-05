@@ -28,7 +28,7 @@ deleteRules:
 groups:
 - orgId: 1
   name: monitoring-alerts
-  folder: ReadingGarden Alerts
+  folder: A1 Shared
   interval: 60s
   rules:
   - uid: prometheus-alert-forwarder
@@ -70,6 +70,11 @@ groups:
     for: 0s
     annotations:
       summary: Prometheus alert is firing; see source_alert and labels.
+- orgId: 1
+  name: monitoring-alerts
+  folder: ReadingGarden
+  interval: 60s
+  rules:
   - uid: grafana-prod-app-error-logs
     title: GrafanaProdAppErrorLogsDetected
     condition: C
@@ -130,6 +135,11 @@ groups:
       env: prod
       signal: logs
       severity: warning
+- orgId: 1
+  name: monitoring-alerts
+  folder: PawTogether
+  interval: 60s
+  rules:
   - uid: grafana-paw-prod-app-error-logs
     title: GrafanaPawProdAppErrorLogsDetected
     condition: C

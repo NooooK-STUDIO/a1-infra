@@ -8,4 +8,20 @@ providers:
     disableDeletion: false
     editable: true
     options:
-      path: /var/lib/grafana/dashboards
+      path: /var/lib/grafana/dashboards/reading-garden
+  - name: PawTogether
+    orgId: 1
+    folder: PawTogether
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards/pawtogether
+  - name: A1 Shared
+    orgId: 1
+    folder: A1 Shared
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards/shared
