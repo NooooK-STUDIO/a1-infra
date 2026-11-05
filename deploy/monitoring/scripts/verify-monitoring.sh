@@ -147,18 +147,16 @@ wait_for_grafana_dashboard_panels() {
   local response
 
   until response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$prod_dashboard_url")" &&
-    printf '%s' "$response" | grep -Fq "Caddy p95 Duration" &&
-    printf '%s' "$response" | grep -Fq "Host CPU Usage Percent" &&
-    printf '%s' "$response" | grep -Fq "Prod Avg Latency" &&
-    printf '%s' "$response" | grep -Fq "Prod p95 Latency" &&
-    printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
-    printf '%s' "$response" | grep -Fq "Prod Active Alerts" &&
-    printf '%s' "$response" | grep -Fq "Prod 5xx Rate" &&
-    printf '%s' "$response" | grep -Fq "Hikari Active Connections" &&
+    printf '%s' "$response" | grep -Fq "Average Response Time" &&
+    printf '%s' "$response" | grep -Fq "p95 Response Time" &&
+    printf '%s' "$response" | grep -Fq "Error Logs (30m)" &&
+    printf '%s' "$response" | grep -Fq "Firing Metric Alerts" &&
+    printf '%s' "$response" | grep -Fq "HTTP 5xx Requests / sec" &&
+    printf '%s' "$response" | grep -Fq "Active DB Connections" &&
     response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$postgres_dashboard_url")" &&
-    printf '%s' "$response" | grep -Fq "Postgres Exporter Up" &&
-    printf '%s' "$response" | grep -Fq "Postgres Connections Percent" &&
-    printf '%s' "$response" | grep -Fq "Database Size" &&
+    printf '%s' "$response" | grep -Fq "PostgreSQL Health" &&
+    printf '%s' "$response" | grep -Fq "Connection Capacity Used" &&
+    printf '%s' "$response" | grep -Fq "Storage by Database" &&
     printf '%s' "$response" | grep -Fq "Deadlocks"; do
     if (( SECONDS >= deadline )); then
       echo "Grafana app dashboards did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
@@ -298,11 +296,12 @@ assert response["meta"]["folderTitle"] == sys.argv[1], "Incorrect dashboard fold
 assert response["dashboard"]["title"] == sys.argv[2], "Incorrect dashboard title"
 ' "$folder" "$title"
 done <<'DASHBOARDS'
-reading-garden-prod-overview|ReadingGarden|ReadingGarden Prod Overview
+reading-garden-prod-overview|ReadingGarden|ReadingGarden Overview
 reading-garden-logs|ReadingGarden|ReadingGarden Logs
-pawtogether-prod-overview|PawTogether|PawTogether Prod Overview
+pawtogether-prod-overview|PawTogether|PawTogether Overview
 pawtogether-logs|PawTogether|PawTogether Logs
 reading-garden-postgres-overview|A1 Shared|Shared PostgreSQL Overview
+a1-shared-overview|A1 Shared|A1 Shared Overview
 DASHBOARDS
 
 for service in reading-garden-kotlin pawtogether; do

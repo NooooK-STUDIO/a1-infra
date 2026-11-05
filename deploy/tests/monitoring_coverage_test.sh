@@ -25,6 +25,14 @@ apps.each do |project, (service, targets, hostname)|
   assert(rules[0]['expr'].include?('or vector(0)') && rules[1..2].all? { |r| r['expr'].include?("service=\"#{service}\"") && r['expr'].include?('absent(') }, "#{project} absent and probe isolation")
   dash = JSON.parse(File.read("#{root}/grafana/dashboards/#{project}/#{project}-logs.json"))
   assert(dash['panels'].to_s.include?(service), "#{project} dashboard labels")
+  overview = JSON.parse(File.read("#{root}/grafana/dashboards/#{project}/#{project}-prod-overview.json"))
+  overview.fetch('panels').each do |panel|
+    panel.fetch('targets', []).each do |target|
+      expression = target.fetch('expr')
+      assert(expression.include?(project) || expression.include?(service) || expression.include?(hostname), "#{project} overview must scope every query to its application")
+      assert(!expression.match?(/job="(?:node-exporter|caddy|postgres-exporter)"/), "#{project} overview must not mix in shared host/proxy/database metrics")
+    end
+  end
 end
 %w[alloy loki grafana].zip(%w[12345 3100 3000]).each { |name, port| assert(jobs.fetch(name)['static_configs'][0]['targets'] == ["127.0.0.1:#{port}"], "#{name} scrape") }
 alloy = File.read("#{root}/alloy/config.alloy")

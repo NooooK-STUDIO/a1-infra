@@ -15,13 +15,17 @@ Infrastructure and deployment assets for services running on OCI A1.
 
 Dashboards and Grafana alert rules are grouped by ownership:
 
-- `A1 Shared`: Shared PostgreSQL Overview and the Prometheus alert forwarder.
+- `A1 Shared`: A1 Shared Overview for host/proxy/collector health, Shared PostgreSQL
+  Overview for database capacity and activity, and the Prometheus alert forwarder.
 - `ReadingGarden`: production overview, application logs, and application log alerts.
 - `PawTogether`: production overview, application logs, and application log alerts.
 
 Dashboard and alert UIDs stay unchanged so existing links keep working. The shared
 PostgreSQL dashboard retains the legacy `reading-garden-postgres-overview` UID.
 Notification routing continues to use service/environment labels.
+Application overviews show only that application's health, traffic, runtime resources,
+and connection pool. Overview links retain the selected time range when moving
+between applications, shared infrastructure, PostgreSQL, and application logs.
 
 ## Verification
 
