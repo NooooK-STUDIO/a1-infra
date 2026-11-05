@@ -883,7 +883,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "expr": "sum(ALERTS{env=\"prod\",alertstate=\"firing\"}) or vector(0)",
+          "expr": "sum(ALERTS{env=\"prod\",service=\"reading-garden-kotlin\",alertstate=\"firing\"}) or vector(0)",
           "refId": "A",
           "legendFormat": "active alerts"
         }
@@ -1854,6 +1854,62 @@
           "refId": "A",
           "expr": "sum(hikaricp_connections_pending{job=\"reading-garden-prod-app\"})",
           "legendFormat": "pending"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "title": "Container CPU Usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\",name=~\"reading-garden-prod-.*\"}[5m])) * 100",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "title": "Container Memory Usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "container_memory_working_set_bytes{job=\"cadvisor\",name=~\"reading-garden-prod-.*\"}",
+          "legendFormat": "{{name}}"
         }
       ]
     }

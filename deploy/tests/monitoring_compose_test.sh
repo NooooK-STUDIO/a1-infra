@@ -160,6 +160,11 @@ assert_localhost_port cadvisor 18082 8080
 assert_no_published_ports blackbox-exporter
 assert_service_contains blackbox-exporter 'network_mode: host'
 assert_no_published_ports postgres-exporter
+assert_service_contains alloy '--storage.path=/var/lib/alloy/data'
+assert_service_contains grafana 'image: grafana/grafana:12.4.14'
+assert_service_contains grafana 'GF_SECURITY_COOKIE_SECURE: "true"'
+assert_service_contains grafana 'GF_SECURITY_CONTENT_SECURITY_POLICY: "true"'
+assert_service_contains cadvisor 'image: ghcr.io/google/cadvisor:0.60.6'
 
 for service in prometheus grafana loki alloy node-exporter cadvisor blackbox-exporter postgres-exporter; do
     assert_service_contains "$service" 'driver: json-file'

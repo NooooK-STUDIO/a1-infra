@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:12.0.0
+    image: grafana/grafana:12.4.14
     container_name: a1-monitoring-grafana
     logging: *default-logging
     depends_on:
@@ -34,6 +34,8 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_COOKIE_SECURE: "true"
+      GF_SECURITY_CONTENT_SECURITY_POLICY: "true"
       GF_METRICS_ENABLED: "true"
       GF_SERVER_HTTP_ADDR: 127.0.0.1
       GF_SERVER_HTTP_PORT: ${GRAFANA_HOST_PORT:-3000}
@@ -67,6 +69,7 @@ services:
     command:
       - run
       - --server.http.listen-addr=127.0.0.1:12345
+      - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
     network_mode: host
     volumes:
@@ -96,7 +99,7 @@ services:
     restart: unless-stopped
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    image: ghcr.io/google/cadvisor:0.60.6
     container_name: a1-monitoring-cadvisor
     logging: *default-logging
     privileged: true

@@ -84,7 +84,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{source=\"docker\"}",
+          "expr": "{source=\"docker\",service=\"reading-garden-kotlin\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -192,7 +192,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{source=\"caddy_access\",env=\"prod\"}",
+          "expr": "{source=\"caddy_access\",env=\"prod\",service=\"reading-garden-kotlin\"}",
           "queryType": "range",
           "refId": "A"
         }

@@ -2,34 +2,32 @@
 set -euo pipefail
 
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:9090}"
-EXPECTED_ALERT_RULES=(
-  ProdAppMetricsDown
-  ProdLocalCaddyHealthDown
-  ProdPublicExternalHealthDown
-  Prod5xxRateHigh
-  ProdAvgLatencyHigh
-  ProdHikariPendingConnections
-  CaddyMetricsDown
-  CaddyRequestLatencyHigh
-  CaddyReloadFailed
-  ContainerExporterDown
-  HostDiskAlmostFull
-  HostMemoryHigh
-  MonitoringTargetDown
-  PostgresExporterDown
-  PostgresConnectionsHigh
-  PostgresDeadlocksDetected
-)
+MONITORING_DIR="${MONITORING_DIR:-/opt/infra/monitoring}"
+EXPECTED_ALERT_RULES=()
+while IFS= read -r name; do
+  EXPECTED_ALERT_RULES+=("$name")
+done < <(awk '
+  function emit() { if (name != "") print name "|" service "|" environment }
+  /^[[:space:]]*- alert:/ { emit(); name=$3; service=""; environment="" }
+  /^[[:space:]]+service:/ { service=$2 }
+  /^[[:space:]]+env:/ { environment=$2 }
+  END { emit() }
+' "${MONITORING_DIR}"/prometheus/rules/*.yml)
+if [ "${#EXPECTED_ALERT_RULES[@]}" -eq 0 ]; then
+  echo "No expected alert rules found" >&2
+  exit 1
+fi
 
 rules_file="$(mktemp)"
 alerts_file="$(mktemp)"
 trap 'rm -f "$rules_file" "$alerts_file"' EXIT
 
-curl -fsS "${PROMETHEUS_URL}/api/v1/rules" > "$rules_file"
-curl -fsS "${PROMETHEUS_URL}/api/v1/alerts" > "$alerts_file"
+curl --connect-timeout 5 --max-time 15 -fsS "${PROMETHEUS_URL}/api/v1/rules" > "$rules_file"
+curl --connect-timeout 5 --max-time 15 -fsS "${PROMETHEUS_URL}/api/v1/alerts" > "$alerts_file"
 
 python3 - "$rules_file" "$alerts_file" "${EXPECTED_ALERT_RULES[@]}" <<'PY'
 import json
+from collections import Counter
 import sys
 
 rules_path, alerts_path, *expected = sys.argv[1:]
@@ -46,23 +44,15 @@ if rules_response.get("status") != "success":
 if alerts_response.get("status") != "success":
     raise SystemExit("Prometheus alerts API did not return success")
 
-rule_names = {}
-rule_health = {}
-for group in rules_response.get("data", {}).get("groups", []):
-    for rule in group.get("rules", []):
-        name = rule.get("name")
-        if name:
-            rule_names[name] = rule.get("state", "unknown")
-            rule_health[name] = rule.get("health", "unknown")
+all_rules = [r for g in rules_response.get("data", {}).get("groups", []) for r in g.get("rules", [])]
 
-missing = [name for name in expected if name not in rule_names]
-unhealthy = [name for name in expected if rule_health.get(name) != "ok"]
+missing = list((Counter(expected) - Counter("|".join([r.get("name", ""), r.get("labels", {}).get("service", ""), r.get("labels", {}).get("env", "")]) for r in all_rules)).elements())
+unhealthy = [r.get("name", "unnamed") for r in all_rules if r.get("health") != "ok"]
 
 print("Expected alert rules")
-for name in expected:
-    state = rule_names.get(name, "missing")
-    health = rule_health.get(name, "missing")
-    print(f"- {name}: state={state} health={health}")
+for rule in all_rules:
+    service = rule.get("labels", {}).get("service", "unknown")
+    print(f"- {service}/{rule.get('name')}: state={rule.get('state')} health={rule.get('health')}")
 
 alerts = alerts_response.get("data", {}).get("alerts", [])
 active = [

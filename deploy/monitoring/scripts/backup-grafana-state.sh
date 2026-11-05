@@ -3,7 +3,6 @@ set -euo pipefail
 
 GRAFANA_CONTAINER="${GRAFANA_CONTAINER:-a1-monitoring-grafana}"
 BACKUP_DIR="${BACKUP_DIR:-/opt/infra/monitoring/backups}"
-GRAFANA_IMAGE="${GRAFANA_IMAGE:-grafana/grafana:12.0.0}"
 
 timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
 backup_file="grafana-data-${timestamp}.tar.gz"
@@ -12,6 +11,8 @@ if ! docker inspect "$GRAFANA_CONTAINER" >/dev/null 2>&1; then
   echo "Grafana container not found: ${GRAFANA_CONTAINER}" >&2
   exit 1
 fi
+
+GRAFANA_IMAGE="${GRAFANA_IMAGE:-$(docker inspect "$GRAFANA_CONTAINER" --format '{{.Config.Image}}')}"
 
 mkdir -p "$BACKUP_DIR"
 chmod 700 "$BACKUP_DIR"

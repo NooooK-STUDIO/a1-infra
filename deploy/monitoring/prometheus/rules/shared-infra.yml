@@ -2,7 +2,7 @@ groups:
   - name: shared-infra
     rules:
       - alert: CaddyMetricsDown
-        expr: up{job="caddy"} == 0
+        expr: (up{job="caddy"} == 0) or absent(up{job="caddy"})
         for: 1m
         labels:
           severity: warning
@@ -35,7 +35,7 @@ groups:
           summary: Caddy last config reload failed
 
       - alert: ContainerExporterDown
-        expr: up{job="cadvisor"} == 0
+        expr: (up{job="cadvisor"} == 0) or absent(up{job="cadvisor"})
         for: 2m
         labels:
           severity: warning
@@ -44,6 +44,39 @@ groups:
           component: container
         annotations:
           summary: cAdvisor container metrics target is down
+
+      - alert: ContainerMetricsMissing
+        expr: (up{job="cadvisor"} == 1) unless on() container_last_seen{job="cadvisor",name!=""}
+        for: 2m
+        labels:
+          severity: warning
+          env: infra
+          service: docker
+          component: container
+        annotations:
+          summary: cAdvisor is up but named container metrics are missing
+
+      - alert: ProdContainerMetricsMissing
+        expr: ((up{job="cadvisor"} == 1) unless on() container_cpu_usage_seconds_total{job="cadvisor",name=~"reading-garden-prod-.*"}) or ((up{job="cadvisor"} == 1) unless on() container_memory_working_set_bytes{job="cadvisor",name=~"reading-garden-prod-.*"})
+        for: 2m
+        labels:
+          severity: warning
+          env: prod
+          service: reading-garden-kotlin
+          component: container
+        annotations:
+          summary: ReadingGarden container CPU or memory metrics are missing while cAdvisor is up
+
+      - alert: ProdContainerMetricsMissing
+        expr: ((up{job="cadvisor"} == 1) unless on() container_cpu_usage_seconds_total{job="cadvisor",name=~"pawtogether-prod-.*"}) or ((up{job="cadvisor"} == 1) unless on() container_memory_working_set_bytes{job="cadvisor",name=~"pawtogether-prod-.*"})
+        for: 2m
+        labels:
+          severity: warning
+          env: prod
+          service: pawtogether
+          component: container
+        annotations:
+          summary: PawTogether container CPU or memory metrics are missing while cAdvisor is up
 
       - alert: HostDiskAlmostFull
         expr: node_filesystem_avail_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} < 0.15
@@ -68,7 +101,7 @@ groups:
           summary: Host memory usage is above 90 percent
 
       - alert: MonitoringTargetDown
-        expr: up{job=~"prometheus|node-exporter|cadvisor|blackbox-public-http|blackbox-local-caddy"} == 0
+        expr: (up{job=~"prometheus|node-exporter|alloy|loki|grafana|blackbox-public-http|blackbox-local-caddy"} == 0) or absent(up{job="prometheus"}) or absent(up{job="node-exporter"}) or absent(up{job="alloy"}) or absent(up{job="loki"}) or absent(up{job="grafana"}) or absent(up{job="blackbox-public-http"}) or absent(up{job="blackbox-local-caddy"})
         for: 2m
         labels:
           severity: warning
@@ -79,7 +112,7 @@ groups:
           summary: A core monitoring scrape target is down
 
       - alert: PostgresExporterDown
-        expr: up{job="postgres-exporter"} == 0 or pg_up{job="postgres-exporter"} == 0
+        expr: (up{job="postgres-exporter"} == 0) or (pg_up{job="postgres-exporter"} == 0) or absent(up{job="postgres-exporter"}) or absent(pg_up{job="postgres-exporter"})
         for: 2m
         labels:
           severity: warning
@@ -110,3 +143,14 @@ groups:
           component: database
         annotations:
           summary: Shared PostgreSQL deadlocks were detected
+
+      - alert: AlloyLogDeliveryDropped
+        expr: sum(increase(loki_write_dropped_entries_total{job="alloy"}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+          env: infra
+          service: monitoring
+          component: logs
+        annotations:
+          summary: Alloy dropped log entries while delivering to Loki

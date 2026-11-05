@@ -10,7 +10,7 @@ deleted = alerts.fetch('deleteRules').select { |r| r['orgId'] == 1 }.map { |r| r
 raise 'missing Grafana rule tombstones' unless (expected - deleted).empty?
 rules = alerts.fetch('groups').flat_map { |g| g.fetch('rules') }
 raise 'retired rules remain active' unless (rules.map { |r| r.fetch('uid') } & expected).empty?
-raise 'production rules missing' unless rules.any? { |r| r['uid'] == 'grafana-prod-app-metrics' }
+raise 'production rules missing' unless rules.any? { |r| r['uid'] == 'prometheus-alert-forwarder' }
 contacts = YAML.load_file('deploy/monitoring/grafana/provisioning/alerting/contact-points.yml')
 raise 'missing contact point tombstone' unless contacts.fetch('deleteContactPoints').any? { |r| r['orgId'] == 1 && r['uid'] == 'reading-garden-discord-dev' }
 raise 'retired contact point active' if contacts.fetch('contactPoints').any? { |r| r['name'] == 'reading-garden-discord-dev' }
