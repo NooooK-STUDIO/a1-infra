@@ -11,9 +11,12 @@ services:
     env_file:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.env
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
+      - path: ${APP_HOST_DIR:?APP_HOST_DIR is required}/.tracing.env
+        required: false
     volumes:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:${APP_DATA_MOUNT_TARGET:-/opt/reading-garden/data}
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/observability:/opt/observability:ro
     networks:
       - default
       - shared-backend
@@ -36,9 +39,12 @@ services:
     env_file:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.env
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
+      - path: ${APP_HOST_DIR:?APP_HOST_DIR is required}/.tracing.env
+        required: false
     volumes:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:${APP_DATA_MOUNT_TARGET:-/opt/reading-garden/data}
+      - ${APP_HOST_DIR:?APP_HOST_DIR is required}/observability:/opt/observability:ro
     networks:
       - default
       - shared-backend

@@ -61,6 +61,14 @@ scrape_configs:
           service: monitoring
           component: grafana
 
+  - job_name: tempo
+    static_configs:
+      - targets: ["127.0.0.1:3200"]
+        labels:
+          env: infra
+          service: monitoring
+          component: tempo
+
   - job_name: caddy
     metrics_path: /metrics
     static_configs:

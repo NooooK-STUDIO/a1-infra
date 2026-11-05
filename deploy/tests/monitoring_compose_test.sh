@@ -161,6 +161,8 @@ assert_no_published_ports prometheus
 assert_no_published_ports grafana
 assert_no_published_ports loki
 assert_no_published_ports alloy
+assert_no_published_ports tempo
+assert_service_contains tempo 'image: grafana/tempo:3.1.1'
 assert_localhost_port node-exporter 9100 9100
 assert_localhost_port cadvisor 18082 8080
 assert_no_published_ports blackbox-exporter
@@ -172,7 +174,7 @@ assert_service_contains grafana 'GF_SECURITY_COOKIE_SECURE: "true"'
 assert_service_contains grafana 'GF_SECURITY_CONTENT_SECURITY_POLICY: "true"'
 assert_service_contains cadvisor 'image: ghcr.io/google/cadvisor:0.60.6'
 
-for service in prometheus grafana loki alloy node-exporter cadvisor blackbox-exporter postgres-exporter; do
+for service in prometheus grafana loki alloy tempo node-exporter cadvisor blackbox-exporter postgres-exporter; do
     assert_service_contains "$service" 'driver: json-file'
     assert_service_contains "$service" 'max-file: "3"'
     assert_service_contains "$service" 'max-size: 10m'

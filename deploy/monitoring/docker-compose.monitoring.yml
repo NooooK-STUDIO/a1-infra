@@ -29,6 +29,7 @@ services:
     depends_on:
       - prometheus
       - loki
+      - tempo
     network_mode: host
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
@@ -61,12 +62,30 @@ services:
       - loki-data:/loki
     restart: unless-stopped
 
+  tempo:
+    image: grafana/tempo:3.1.1
+    container_name: a1-monitoring-tempo
+    logging: *default-logging
+    command: ["-config.file=/etc/tempo/tempo.yml", "-target=all"]
+    network_mode: host
+    mem_limit: 2g
+    environment:
+      GOMEMLIMIT: 1600MiB
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo-data:/var/tempo
+    restart: unless-stopped
+
   alloy:
     image: grafana/alloy:v1.9.1
     container_name: a1-monitoring-alloy
     logging: *default-logging
     depends_on:
       - loki
+      - tempo
+    environment:
+      # Bind only the shared application bridge, never a public interface.
+      OTLP_HTTP_LISTEN_ADDRESS: ${OTLP_HTTP_LISTEN_ADDRESS:-172.24.0.1:4318}
     command:
       - run
       - --server.http.listen-addr=127.0.0.1:12345
@@ -150,3 +169,4 @@ volumes:
   grafana-data:
   loki-data:
   alloy-data:
+  tempo-data:

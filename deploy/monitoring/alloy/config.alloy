@@ -163,3 +163,56 @@ loki.write "local" {
     url = "http://127.0.0.1:3100/loki/api/v1/push"
   }
 }
+
+otelcol.receiver.otlp "apps" {
+  http {
+    endpoint = sys.env("OTLP_HTTP_LISTEN_ADDRESS")
+  }
+  output {
+    traces = [otelcol.processor.memory_limiter.traces.input]
+  }
+}
+
+otelcol.processor.memory_limiter "traces" {
+  check_interval = "1s"
+  limit = "512MiB"
+  output {
+    traces = [otelcol.processor.transform.trace_privacy.input]
+  }
+}
+
+otelcol.processor.transform "trace_privacy" {
+  error_mode = "propagate"
+  trace_statements {
+    context = "span"
+    statements = [
+      `delete_key(attributes, "url.query")`,
+      `delete_key(attributes, "url.full")`,
+      `delete_key(attributes, "http.url")`,
+      `delete_key(attributes, "http.target")`,
+      `delete_key(attributes, "db.statement")`,
+      `delete_key(attributes, "db.query.text")`,
+    ]
+  }
+  output {
+    traces = [otelcol.processor.batch.traces.input]
+  }
+}
+
+otelcol.processor.batch "traces" {
+  timeout = "5s"
+  send_batch_size = 512
+  send_batch_max_size = 1024
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "127.0.0.1:14317"
+    tls {
+      insecure = true
+    }
+  }
+}
