@@ -13,7 +13,7 @@ discovery.relabel "containers" {
 
   rule {
     source_labels = ["__meta_docker_container_name"]
-    regex         = "/reading-garden-(prod|dev)-.*"
+    regex         = "/reading-garden-prod-.*"
     action        = "keep"
   }
 
@@ -57,7 +57,7 @@ loki.relabel "app_containers" {
 
   rule {
     source_labels = ["container"]
-    regex         = "reading-garden-(prod|dev)-.*"
+    regex         = "reading-garden-prod-.*"
     action        = "keep"
   }
 }
@@ -82,14 +82,6 @@ local.file_match "caddy_access" {
       __address__ = "localhost",
       __path__ = "/var/log/caddy/reading-garden-prod-access.log",
       env = "prod",
-      host = "oracle-a1",
-      service = "caddy",
-      source = "caddy_access",
-    },
-    {
-      __address__ = "localhost",
-      __path__ = "/var/log/caddy/reading-garden-dev-access.log",
-      env = "dev",
       host = "oracle-a1",
       service = "caddy",
       source = "caddy_access",

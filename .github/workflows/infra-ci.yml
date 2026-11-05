@@ -61,13 +61,10 @@ jobs:
           POSTGRES_SUPERUSER_PASSWORD=ci-secret \
           READING_GARDEN_PROD_APP_PASSWORD=ci-secret \
           READING_GARDEN_PROD_MIGRATOR_PASSWORD=ci-secret \
-          READING_GARDEN_DEV_APP_PASSWORD=ci-secret \
-          READING_GARDEN_DEV_MIGRATOR_PASSWORD=ci-secret \
             docker compose -f deploy/docker-compose.postgres-shared.yml config >/dev/null
 
           GRAFANA_ADMIN_PASSWORD=ci-secret \
           NOOOOK_DISCORD_WEBHOOK_URL=https://example.invalid/nooook-discord-webhook \
-          GRAFANA_DISCORD_DEV_WEBHOOK_URL=https://example.invalid/dev-discord-webhook \
           GRAFANA_DISCORD_PROD_WEBHOOK_URL=https://example.invalid/prod-discord-webhook \
           POSTGRES_EXPORTER_PASSWORD=ci-secret \
             docker compose -f deploy/monitoring/docker-compose.monitoring.yml config >/dev/null
@@ -112,7 +109,6 @@ jobs:
           cp -R deploy/host-caddy/. "$caddy_dir/"
           mkdir -p "$caddy_dir/upstreams"
           printf 'reverse_proxy 127.0.0.1:18080\n' > "$caddy_dir/upstreams/reading-garden-prod.caddy"
-          printf 'reverse_proxy 127.0.0.1:18090\n' > "$caddy_dir/upstreams/reading-garden-dev.caddy"
           printf 'reverse_proxy 127.0.0.1:18110\n' > "$caddy_dir/upstreams/pawtogether-prod.caddy"
           printf 'reverse_proxy 127.0.0.1:18100\n' > "$caddy_dir/upstreams/pawtogether-dev.caddy"
 

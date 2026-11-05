@@ -7,15 +7,8 @@ ENV_FILE="${MONITORING_DIR}/.env"
 GRAFANA_URL="${GRAFANA_URL:-http://127.0.0.1:3000}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:9090}"
 LOKI_URL="${LOKI_URL:-http://127.0.0.1:3100}"
-DEV_BASE_URL="${DEV_BASE_URL:-https://readinggarden-dev.duckdns.org}"
 VERIFY_TIMEOUT_SECONDS="${VERIFY_TIMEOUT_SECONDS:-60}"
 EXPECTED_ALERT_RULES=(
-  DevAppMetricsDown
-  DevLocalCaddyHealthDown
-  DevPublicExternalHealthDown
-  Dev5xxRateHigh
-  DevAvgLatencyHigh
-  HikariPendingConnections
   ProdAppMetricsDown
   ProdLocalCaddyHealthDown
   ProdPublicExternalHealthDown
@@ -150,20 +143,13 @@ wait_for_grafana_loki_datasource() {
 
 wait_for_grafana_dashboard_panels() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
-  local dev_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-dev-overview"
   local prod_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-prod-overview"
   local postgres_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-postgres-overview"
   local response
 
-  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dev_dashboard_url")" &&
-    printf '%s' "$response" | grep -Fq "Dev Avg Latency" &&
-    printf '%s' "$response" | grep -Fq "Dev p95 Latency" &&
-    printf '%s' "$response" | grep -Fq "Dev Recent Error Logs" &&
-    printf '%s' "$response" | grep -Fq "Dev Active Alerts" &&
+  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$prod_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Caddy p95 Duration" &&
     printf '%s' "$response" | grep -Fq "Host CPU Usage Percent" &&
-    printf '%s' "$response" | grep -Fq "Hikari Active Connections" &&
-    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$prod_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Prod Avg Latency" &&
     printf '%s' "$response" | grep -Fq "Prod p95 Latency" &&
     printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
@@ -190,13 +176,10 @@ wait_for_grafana_logs_dashboard_panels() {
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
-    printf '%s' "$response" | grep -Fq "Dev Recent Error Logs" &&
     printf '%s' "$response" | grep -Fq "App Container Logs" &&
     printf '%s' "$response" | grep -Fq "Prod App Logs" &&
-    printf '%s' "$response" | grep -Fq "Dev App Logs" &&
     printf '%s' "$response" | grep -Fq "Caddy Systemd Logs" &&
-    printf '%s' "$response" | grep -Fq "Prod Caddy Access Logs" &&
-    printf '%s' "$response" | grep -Fq "Dev Caddy Access Logs"; do
+    printf '%s' "$response" | grep -Fq "Prod Caddy Access Logs"; do
     if (( SECONDS >= deadline )); then
       echo "Grafana logs dashboard did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1
@@ -210,14 +193,10 @@ wait_for_grafana_alerting() {
   local contact_points_url="${GRAFANA_URL}/api/v1/provisioning/contact-points"
   local policies_url="${GRAFANA_URL}/api/v1/provisioning/policies"
   local alert_rule_uids=(
-    grafana-dev-local-caddy-health
     grafana-prod-local-caddy-health
-    grafana-dev-public-external-health
     grafana-prod-public-external-health
-    grafana-dev-app-metrics
     grafana-prod-app-metrics
     grafana-caddy-metrics
-    grafana-dev-app-error-logs
     grafana-prod-app-error-logs
     grafana-host-disk-full
   )
@@ -227,14 +206,12 @@ wait_for_grafana_alerting() {
 
   until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$contact_points_url")" &&
     printf '%s' "$response" | grep -Fq '"name":"nooook-discord"' &&
-    printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-dev"' &&
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-prod"' &&
     printf '%s' "$response" | grep -Fq '"type":"discord"' &&
     response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "${GRAFANA_URL}/api/v1/provisioning/templates/reading-garden-discord-template")" &&
     printf '%s' "$response" | grep -Fq 'reading_garden_discord.message' &&
     response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
     printf '%s' "$response" | grep -Fq '"receiver":"nooook-discord"' &&
-    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-dev"' &&
     printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-prod"'; do
     if (( SECONDS >= deadline )); then
       echo "Grafana Discord alerting contact point or notification policy did not load within ${VERIFY_TIMEOUT_SECONDS}s" >&2
@@ -270,12 +247,9 @@ wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"
 wait_for_http "${LOKI_URL}/ready" "Loki readiness"
 wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
-assert_prometheus_query_has_result 'sum(up{job="reading-garden-dev-app"}) > 0' 'reading-garden-dev-app'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-prod-app"}) > 0' 'reading-garden-prod-app'
 assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://readinggarden.duckdns.org/api/health"} == 1' 'prod public health blackbox'
-assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://readinggarden-dev.duckdns.org/api/health"} == 1' 'dev public health blackbox'
 assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",env="prod"} == 1' 'prod local caddy health blackbox'
-assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",env="dev"} == 1' 'dev local caddy health blackbox'
 assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'
 assert_prometheus_query_has_result 'up{job="node-exporter"} == 1' 'node-exporter'
 assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'
@@ -290,8 +264,5 @@ wait_for_grafana_loki_datasource
 wait_for_grafana_dashboard_panels
 wait_for_grafana_logs_dashboard_panels
 wait_for_grafana_alerting
-
-curl -fsS "${DEV_BASE_URL}/api/health" | grep -Fq '"UP"'
-curl -fsS "${DEV_BASE_URL}/v3/api-docs" >/dev/null
 
 echo "PASS: monitoring verification completed"

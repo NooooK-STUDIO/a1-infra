@@ -4,6 +4,9 @@ deleteContactPoints:
   - orgId: 1
     uid: reading-garden-discord
 
+  - orgId: 1
+    uid: reading-garden-discord-dev
+
 contactPoints:
   - orgId: 1
     name: nooook-discord
@@ -13,17 +16,6 @@ contactPoints:
         disableResolveMessage: false
         settings:
           url: $NOOOOK_DISCORD_WEBHOOK_URL
-          use_discord_username: false
-          title: '{{ template "reading_garden_discord.title" . }}'
-          message: '{{ template "reading_garden_discord.message" . }}'
-  - orgId: 1
-    name: reading-garden-discord-dev
-    receivers:
-      - uid: reading-garden-discord-dev
-        type: discord
-        disableResolveMessage: false
-        settings:
-          url: $GRAFANA_DISCORD_DEV_WEBHOOK_URL
           use_discord_username: false
           title: '{{ template "reading_garden_discord.title" . }}'
           message: '{{ template "reading_garden_discord.message" . }}'
