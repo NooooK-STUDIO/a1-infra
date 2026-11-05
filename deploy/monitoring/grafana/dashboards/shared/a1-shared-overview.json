@@ -2,7 +2,7 @@
   "uid": "a1-shared-overview",
   "title": "A1 Shared Overview",
   "schemaVersion": 41,
-  "version": 1,
+  "version": 2,
   "refresh": "15s",
   "tags": [
     "shared",
@@ -1502,6 +1502,13 @@
       "title": "PawTogether",
       "type": "link",
       "url": "/d/pawtogether-prod-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "Shared Logs",
+      "type": "link",
+      "url": "/d/a1-shared-logs",
       "targetBlank": false,
       "keepTime": true
     }

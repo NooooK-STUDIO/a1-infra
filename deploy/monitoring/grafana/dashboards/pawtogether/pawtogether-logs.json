@@ -18,7 +18,29 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "links": [],
+  "links": [
+    {
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/pawtogether-prod-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "Shared Logs",
+      "type": "link",
+      "url": "/d/a1-shared-logs",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "ReadingGarden Logs",
+      "type": "link",
+      "url": "/d/reading-garden-logs",
+      "targetBlank": false,
+      "keepTime": true
+    }
+  ],
   "panels": [
     {
       "datasource": {
@@ -26,8 +48,8 @@
         "uid": "loki"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -37,7 +59,7 @@
         "enableLogDetails": true,
         "prettifyLogMessage": false,
         "showCommonLabels": false,
-        "showLabels": true,
+        "showLabels": false,
         "showTime": true,
         "sortOrder": "Descending",
         "wrapLogMessage": true
@@ -53,8 +75,9 @@
           "refId": "A"
         }
       ],
-      "title": "Prod Recent Error Logs",
-      "type": "logs"
+      "title": "Application Errors",
+      "type": "logs",
+      "description": "Errors and exceptions matching the application alert filter. An empty result can mean no matching errors or missing log collection."
     },
     {
       "datasource": {
@@ -65,7 +88,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 9
       },
       "id": 1,
       "options": {
@@ -73,43 +96,7 @@
         "enableLogDetails": true,
         "prettifyLogMessage": false,
         "showCommonLabels": false,
-        "showLabels": true,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "{source=\"docker\",service=\"pawtogether\"}",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "App Container Logs",
-      "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 20
-      },
-      "id": 2,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": true,
+        "showLabels": false,
         "showTime": true,
         "sortOrder": "Descending",
         "wrapLogMessage": true
@@ -125,8 +112,9 @@
           "refId": "A"
         }
       ],
-      "title": "Prod App Logs",
-      "type": "logs"
+      "title": "Application Logs",
+      "type": "logs",
+      "description": "PawTogether production application output from both deployment slots, newest first. An empty result can mean no output in this time range or missing log collection."
     },
     {
       "datasource": {
@@ -137,43 +125,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 32
-      },
-      "id": 4,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": true,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "{unit=\"caddy.service\"}",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Caddy Systemd Logs",
-      "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 44
+        "y": 21
       },
       "id": 5,
       "options": {
@@ -181,7 +133,7 @@
         "enableLogDetails": true,
         "prettifyLogMessage": false,
         "showCommonLabels": false,
-        "showLabels": true,
+        "showLabels": false,
         "showTime": true,
         "sortOrder": "Descending",
         "wrapLogMessage": true
@@ -197,8 +149,9 @@
           "refId": "A"
         }
       ],
-      "title": "Prod Caddy Access Logs",
-      "type": "logs"
+      "title": "HTTP Access Logs",
+      "type": "logs",
+      "description": "HTTP requests routed to PawTogether. Expand a log line to inspect request and response fields."
     }
   ],
   "preload": false,
@@ -219,5 +172,6 @@
   "timezone": "browser",
   "title": "PawTogether Logs",
   "uid": "pawtogether-logs",
-  "version": 3
+  "version": 4,
+  "description": "PawTogether production errors, application output, and HTTP access logs. Shared proxy service logs are linked separately."
 }

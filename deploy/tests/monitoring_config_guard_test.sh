@@ -18,6 +18,8 @@ grep -Fq 'uid: grafana-prod-external-health' deploy/monitoring/grafana/provision
 grep -Fq 'uid: grafana-dev-external-health' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
 test -f deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 test -f deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+test -f deploy/monitoring/grafana/dashboards/pawtogether/pawtogether-logs.json
+test -f deploy/monitoring/grafana/dashboards/shared/a1-shared-logs.json
 test -f deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 test -x deploy/monitoring/scripts/bootstrap-monitoring.sh
 test -x deploy/monitoring/scripts/verify-monitoring.sh
@@ -67,9 +69,8 @@ grep -Fq 'PostgreSQL Health' deploy/monitoring/grafana/dashboards/shared/shared-
 grep -Fq 'Connection Usage' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'pg_up{job=\"postgres-exporter\"}' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
-grep -Fq '{source=\"docker\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq '{container=~\"reading-garden-prod-.*\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
-grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq '{unit=\"caddy.service\"}' deploy/monitoring/grafana/dashboards/shared/a1-shared-logs.json
 grep -Fq '{source=\"caddy_access\",env=\"prod\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq 'loki.source.docker "containers"' deploy/monitoring/alloy/config.alloy
 grep -Fq 'local.file_match "caddy_access"' deploy/monitoring/alloy/config.alloy
@@ -187,26 +188,27 @@ grep -Fq 'nooook-discord' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'reading-garden-discord-prod' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/dashboards/uid/reading-garden-prod-overview' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/datasources/uid/loki/health' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq '/api/dashboards/uid/reading-garden-logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'reading-garden-logs|' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'pawtogether-logs|' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'a1-shared-logs|' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/loki/api/v1/query_range' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '"result":[{' deploy/monitoring/scripts/verify-monitoring.sh
-if rg -n 'assert_loki_query_has_result .*source="docker"' deploy/monitoring/scripts/verify-monitoring.sh; then
+if rg -n 'assert_loki_query_has_result .*(source="docker"|container=|\|~)' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "monitoring verification must not require app container logs on every run" >&2
     exit 1
 fi
 grep -Fq 'Average Response Time' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'p95 Response Time' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Prod Recent Error Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Application Errors' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Firing Metric Alerts' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Host Resources' deploy/monitoring/grafana/dashboards/shared/a1-shared-overview.json
-grep -Fq 'App Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Prod App Logs' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
+grep -Fq 'Application Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Application Errors' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq '|~ \"(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq '!~ \"(?i)(no error|error page|error dispatch)\"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq 'FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
-grep -Fq 'Caddy Systemd Logs' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Prod Caddy Access Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Caddy Service Logs' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'HTTP Access Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq '/api/v1/alerts' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq '/api/v1/rules' deploy/monitoring/scripts/check-alerts.sh
 grep -Fq 'python3' deploy/monitoring/scripts/check-alerts.sh

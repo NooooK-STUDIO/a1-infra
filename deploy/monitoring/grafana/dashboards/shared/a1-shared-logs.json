@@ -1,0 +1,104 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [
+    {
+      "title": "A1 Shared Overview",
+      "type": "link",
+      "url": "/d/a1-shared-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "ReadingGarden Logs",
+      "type": "link",
+      "url": "/d/reading-garden-logs",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "PawTogether Logs",
+      "type": "link",
+      "url": "/d/pawtogether-logs",
+      "targetBlank": false,
+      "keepTime": true
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{unit=\"caddy.service\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Caddy Service Logs",
+      "type": "logs",
+      "description": "Shared reverse proxy startup, reload, certificate, and service events. An empty result can mean no recent service events or missing log collection."
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": [
+    "a1",
+    "shared",
+    "logs"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "A1 Shared Logs",
+  "uid": "a1-shared-logs",
+  "version": 1,
+  "description": "Shared Caddy service events for the A1 host. Application output and HTTP access logs are available in each application log dashboard."
+}

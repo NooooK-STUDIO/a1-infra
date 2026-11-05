@@ -168,21 +168,29 @@ wait_for_grafana_dashboard_panels() {
 
 wait_for_grafana_logs_dashboard_panels() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
-  local dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-logs"
-  local response
+  local dashboard_uid expected response
 
-  until response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
-    printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
-    printf '%s' "$response" | grep -Fq "App Container Logs" &&
-    printf '%s' "$response" | grep -Fq "Prod App Logs" &&
-    printf '%s' "$response" | grep -Fq "Caddy Systemd Logs" &&
-    printf '%s' "$response" | grep -Fq "Prod Caddy Access Logs"; do
-    if (( SECONDS >= deadline )); then
-      echo "Grafana logs dashboard did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
-      exit 1
-    fi
-    sleep 2
-  done
+  while IFS='|' read -r dashboard_uid expected; do
+    until response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+      "${GRAFANA_URL}/api/dashboards/uid/${dashboard_uid}")" &&
+      printf '%s' "$response" | python3 -c '
+import json, sys
+panels = json.load(sys.stdin)["dashboard"]["panels"]
+expected = json.loads(sys.argv[1])
+actual = {str(p["id"]): p["title"] for p in panels if p.get("type") == "logs"}
+sys.exit(0 if len(panels) == len(expected) and actual == expected else 1)
+' "$expected"; do
+      if (( SECONDS >= deadline )); then
+        echo "Grafana logs dashboard ${dashboard_uid} did not load expected panels within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+        exit 1
+      fi
+      sleep 2
+    done
+  done <<'LOG_DASHBOARDS'
+reading-garden-logs|{"7":"Application Errors","1":"Application Logs","5":"HTTP Access Logs"}
+pawtogether-logs|{"7":"Application Errors","1":"Application Logs","5":"HTTP Access Logs"}
+a1-shared-logs|{"4":"Caddy Service Logs"}
+LOG_DASHBOARDS
 }
 
 wait_for_grafana_alerting() {
@@ -302,6 +310,7 @@ pawtogether-prod-overview|PawTogether|PawTogether Overview
 pawtogether-logs|PawTogether|PawTogether Logs
 reading-garden-postgres-overview|A1 Shared|Shared PostgreSQL Overview
 a1-shared-overview|A1 Shared|A1 Shared Overview
+a1-shared-logs|A1 Shared|A1 Shared Logs
 DASHBOARDS
 
 for service in reading-garden-kotlin pawtogether; do
