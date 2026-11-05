@@ -42,6 +42,7 @@ services:
       GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-https://nooook-monitoring.duckdns.org}
       NOOOOK_DISCORD_WEBHOOK_URL: ${NOOOOK_DISCORD_WEBHOOK_URL:?NOOOOK_DISCORD_WEBHOOK_URL is required}
       GRAFANA_DISCORD_PROD_WEBHOOK_URL: ${GRAFANA_DISCORD_PROD_WEBHOOK_URL:?GRAFANA_DISCORD_PROD_WEBHOOK_URL is required}
+      GRAFANA_DISCORD_PAW_WEBHOOK_URL: ${GRAFANA_DISCORD_PAW_WEBHOOK_URL:?GRAFANA_DISCORD_PAW_WEBHOOK_URL is required}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro

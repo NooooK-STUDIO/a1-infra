@@ -95,7 +95,22 @@ assert(rules.size == 3 && forward['noDataState'] == 'OK' && forward['execErrStat
 assert(%w[grafana-prod-local-caddy-health grafana-prod-public-external-health grafana-prod-app-metrics grafana-caddy-metrics grafana-host-disk-full].all? { |uid| a['deleteRules'].any? { |r| r['uid'] == uid } }, 'obsolete rules')
 assert(rules.select { |r| r['uid'].include?('app-error-logs') }.map { |r| r['labels']['service'] }.sort == %w[pawtogether reading-garden-kotlin], 'separate log alerts')
 policy = YAML.load_file("#{root}/grafana/provisioning/alerting/notification-policies.yml")['policies'][0]
-assert(policy['receiver'] == 'nooook-discord' && policy['routes'].size == 1 && policy['routes'][0]['receiver'] == 'reading-garden-discord-prod' && policy['routes'][0]['object_matchers'].include?(['service', '=', 'reading-garden-kotlin']) && policy['routes'][0]['object_matchers'].include?(['env', '=', 'prod']) && policy['group_by'].include?('source_alert'), 'routing')
+assert(policy['receiver'] == 'nooook-discord' && policy['group_by'].include?('source_alert'), 'default routing')
+expected_routes = {'reading-garden-discord-prod' => 'reading-garden-kotlin', 'pawtogether-discord-prod' => 'pawtogether'}
+assert(policy['routes'].size == expected_routes.size, 'route count')
+policy['routes'].each do |route|
+  service = expected_routes.fetch(route['receiver'])
+  assert(route['object_matchers'].sort == [['service', '=', service], ['env', '=', 'prod']].sort, "#{service} matchers")
+  assert(!route['continue'] && %w[group_by group_wait group_interval repeat_interval].all? { |key| route[key] == policy[key] }, "#{service} grouping and timing")
+end
+contacts = YAML.load_file("#{root}/grafana/provisioning/alerting/contact-points.yml").fetch('contactPoints')
+expected_urls = {'nooook-discord' => '$NOOOOK_DISCORD_WEBHOOK_URL', 'reading-garden-discord-prod' => '$GRAFANA_DISCORD_PROD_WEBHOOK_URL', 'pawtogether-discord-prod' => '$GRAFANA_DISCORD_PAW_WEBHOOK_URL'}
+expected_urls.each do |name, url|
+  contact = contacts.find { |c| c['name'] == name }
+  receiver = contact.fetch('receivers').fetch(0)
+  assert(receiver['uid'] == name && receiver['type'] == 'discord' && receiver['disableResolveMessage'] == false && receiver['settings']['url'] == url, "#{name} contact")
+  assert(receiver['settings']['title'] == '{{ template "reading_garden_discord.title" . }}' && receiver['settings']['message'] == '{{ template "reading_garden_discord.message" . }}', "#{name} templates")
+end
 assert(File.read("#{root}/grafana/provisioning/alerting/notification-templates.yml").scan('source_alert').size >= 2, 'notification source name')
 assert(File.read("#{root}/grafana/dashboards/shared/shared-postgres-overview.json").include?('pawtogether_prod'), 'database dashboard')
 puts 'Monitoring coverage configuration checks passed'

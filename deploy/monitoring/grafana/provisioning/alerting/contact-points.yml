@@ -30,3 +30,14 @@ contactPoints:
           use_discord_username: false
           title: '{{ template "reading_garden_discord.title" . }}'
           message: '{{ template "reading_garden_discord.message" . }}'
+  - orgId: 1
+    name: pawtogether-discord-prod
+    receivers:
+      - uid: pawtogether-discord-prod
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: $GRAFANA_DISCORD_PAW_WEBHOOK_URL
+          use_discord_username: false
+          title: '{{ template "reading_garden_discord.title" . }}'
+          message: '{{ template "reading_garden_discord.message" . }}'

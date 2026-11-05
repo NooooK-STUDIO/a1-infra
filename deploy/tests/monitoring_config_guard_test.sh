@@ -55,6 +55,7 @@ grep -Fq 'GF_METRICS_ENABLED: "true"' deploy/monitoring/docker-compose.monitorin
 grep -Fq 'GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-https://nooook-monitoring.duckdns.org}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'NOOOOK_DISCORD_WEBHOOK_URL: ${NOOOOK_DISCORD_WEBHOOK_URL:?NOOOOK_DISCORD_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GRAFANA_DISCORD_PROD_WEBHOOK_URL: ${GRAFANA_DISCORD_PROD_WEBHOOK_URL:?GRAFANA_DISCORD_PROD_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
+grep -Fq 'GRAFANA_DISCORD_PAW_WEBHOOK_URL: ${GRAFANA_DISCORD_PAW_WEBHOOK_URL:?GRAFANA_DISCORD_PAW_WEBHOOK_URL is required}' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'network_mode: host' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq -- '--web.listen-address=127.0.0.1:9090' deploy/monitoring/docker-compose.monitoring.yml
 grep -Fq 'GF_SERVER_HTTP_ADDR: 127.0.0.1' deploy/monitoring/docker-compose.monitoring.yml
@@ -155,6 +156,9 @@ if rg -n --pcre2 'name: reading-garden-discord(?!-(dev|prod|template))|GRAFANA_D
 fi
 grep -Fq 'url: $GRAFANA_DISCORD_PROD_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
 grep -Fq 'receiver: reading-garden-discord-prod' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
+grep -Fq 'uid: pawtogether-discord-prod' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'url: $GRAFANA_DISCORD_PAW_WEBHOOK_URL' deploy/monitoring/grafana/provisioning/alerting/contact-points.yml
+grep -Fq 'receiver: pawtogether-discord-prod' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 grep -Fq 'receiver: nooook-discord' deploy/monitoring/grafana/provisioning/alerting/notification-policies.yml
 grep -Fq 'GrafanaProdAppErrorLogsDetected' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
 grep -Fq 'for: 1m' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml
@@ -166,6 +170,8 @@ grep -Fq 'signal: logs' deploy/monitoring/grafana/provisioning/alerting/monitori
 grep -A55 'uid: grafana-prod-app-error-logs' deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml | grep -Fq 'for: 1m'
 grep -Fq 'NOOOOK_DISCORD_WEBHOOK_URL=' deploy/monitoring/.env.example
 grep -Fq 'GRAFANA_DISCORD_PROD_WEBHOOK_URL=' deploy/monitoring/.env.example
+grep -Fq 'GRAFANA_DISCORD_PAW_WEBHOOK_URL=' deploy/monitoring/.env.example
+grep -Fq 'GRAFANA_DISCORD_PAW_WEBHOOK_URL' deploy/monitoring/scripts/bootstrap-monitoring.sh
 grep -Fq 'POSTGRES_EXPORTER_PASSWORD=' deploy/monitoring/.env.example
 grep -Fq 'docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate' deploy/monitoring/scripts/bootstrap-monitoring.sh
 grep -Fq 'NOOOOK_DISCORD_WEBHOOK_URL' deploy/monitoring/scripts/bootstrap-monitoring.sh

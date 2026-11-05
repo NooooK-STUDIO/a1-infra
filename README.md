@@ -24,6 +24,11 @@ Dashboards and Grafana alert rules are grouped by ownership:
 Dashboard and alert UIDs stay unchanged so existing links keep working. The shared
 PostgreSQL dashboard retains the legacy `reading-garden-postgres-overview` UID.
 Notification routing continues to use service/environment labels.
+ReadingGarden production alerts use `reading-garden-discord-prod`, PawTogether
+production alerts use `pawtogether-discord-prod`, and shared infrastructure alerts
+use the default `nooook-discord` receiver. Set `GRAFANA_DISCORD_PAW_WEBHOOK_URL` in
+the host's monitoring `.env` before deploying; all three webhook values remain
+host-local secrets. Each receiver sends both firing and resolved notifications.
 Application overviews show only that application's health, traffic, runtime resources,
 and connection pool. Overview links retain the selected time range when moving
 between applications, shared infrastructure, PostgreSQL, and application logs.

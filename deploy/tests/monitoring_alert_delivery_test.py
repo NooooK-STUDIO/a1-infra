@@ -15,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = Path(__file__).resolve().parents[1] / 'monitoring/grafana/provisioning'
 PREFIX = 'alert-delivery-' + os.urandom(5).hex()
 messages = []
-active = {'ReadingGardenProbe', 'PawProbe', 'InfraProbe', 'ReadingGardenSecond'}
+active = {'ReadingGardenProbe', 'PawProbe', 'InfraProbe', 'ReadingGardenSecond', 'PawDevProbe', 'ReadingGardenDevProbe'}
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
@@ -66,8 +66,21 @@ def text_of(payload):
     return json.dumps(payload, ensure_ascii=False)
 
 
-def delivered(path, status, name):
-    return any(p == path and any(status.upper() in embed.get('title', '') and name in embed.get('title', '') and ('infra' if name == 'InfraProbe' else 'prod') in embed.get('title', '') for embed in body.get('embeds', [])) for p, body in messages)
+def delivered(path, status, name, env):
+    return any(p == path and any(status.upper() in embed.get('title', '') and name in embed.get('title', '') and env in embed.get('title', '') for embed in body.get('embeds', [])) for p, body in messages)
+
+
+def receiver(service, env):
+    if env == 'prod':
+        return {'reading-garden-kotlin': '/reading', 'pawtogether': '/paw'}.get(service, '/shared')
+    return '/shared'
+
+
+def assert_no_cross_routing(alerts):
+    for name, service, env in alerts:
+        for path in {'/reading', '/paw', '/shared'} - {receiver(service, env)}:
+            for status in ('firing', 'resolved'):
+                assert not delivered(path, status, name, env), f'{name} {status} delivered to {path}'
 
 
 def main():
@@ -112,7 +125,7 @@ scrape_configs:
     static_configs:
       - targets: ["host.docker.internal:%d"]
 ''' % port)
-        alerts = [('ReadingGardenProbe', 'reading-garden-kotlin', 'prod'), ('ReadingGardenSecond', 'reading-garden-kotlin', 'prod'), ('PawProbe', 'pawtogether', 'prod'), ('InfraProbe', 'monitoring', 'infra')]
+        alerts = [('ReadingGardenProbe', 'reading-garden-kotlin', 'prod'), ('ReadingGardenSecond', 'reading-garden-kotlin', 'prod'), ('PawProbe', 'pawtogether', 'prod'), ('InfraProbe', 'monitoring', 'infra'), ('PawDevProbe', 'pawtogether', 'dev'), ('ReadingGardenDevProbe', 'reading-garden-kotlin', 'dev')]
         content = 'groups:\n- name: synthetic\n  interval: 2s\n  rules:\n'
         for name, service, env in alerts:
             content += '  - alert: %s\n    expr: test_alert{name="%s"} == 1\n    labels:\n      service: %s\n      env: %s\n      severity: warning\n' % (name, name, service, env)
@@ -120,13 +133,12 @@ scrape_configs:
         try:
             docker('network', 'create', PREFIX)
             docker('run', '-d', '--name', PREFIX + '-prom', '--network', PREFIX, '--network-alias', 'prometheus', '--add-host', 'host.docker.internal:host-gateway', '-v', str(tmp / 'prometheus.yml') + ':/etc/prometheus/prometheus.yml:ro', '-v', str(tmp / 'prom-rules.yml') + ':/etc/prometheus/rules.yml:ro', 'prom/prometheus:v3.4.0')
-            docker('run', '-d', '--name', PREFIX + '-grafana', '--network', PREFIX, '--add-host', 'host.docker.internal:host-gateway', '-p', '127.0.0.1::3000', '-e', 'GF_SECURITY_ADMIN_PASSWORD=integration-test', '-e', 'GF_PLUGINS_PREINSTALL_DISABLED=true', '-e', 'GF_ANALYTICS_CHECK_FOR_UPDATES=false', '-e', 'GF_UNIFIED_ALERTING_MIN_INTERVAL=10s', '-e', 'NOOOOK_DISCORD_WEBHOOK_URL=http://host.docker.internal:%d/shared' % port, '-e', 'GRAFANA_DISCORD_PROD_WEBHOOK_URL=http://host.docker.internal:%d/reading' % port, '-v', str(alert_dir) + ':/etc/grafana/provisioning/alerting:ro', '-v', str(data_dir) + ':/etc/grafana/provisioning/datasources:ro', 'grafana/grafana:12.4.14')
+            docker('run', '-d', '--name', PREFIX + '-grafana', '--network', PREFIX, '--add-host', 'host.docker.internal:host-gateway', '-p', '127.0.0.1::3000', '-e', 'GF_SECURITY_ADMIN_PASSWORD=integration-test', '-e', 'GF_PLUGINS_PREINSTALL_DISABLED=true', '-e', 'GF_ANALYTICS_CHECK_FOR_UPDATES=false', '-e', 'GF_UNIFIED_ALERTING_MIN_INTERVAL=10s', '-e', 'NOOOOK_DISCORD_WEBHOOK_URL=http://host.docker.internal:%d/shared' % port, '-e', 'GRAFANA_DISCORD_PROD_WEBHOOK_URL=http://host.docker.internal:%d/reading' % port, '-e', 'GRAFANA_DISCORD_PAW_WEBHOOK_URL=http://host.docker.internal:%d/paw' % port, '-v', str(alert_dir) + ':/etc/grafana/provisioning/alerting:ro', '-v', str(data_dir) + ':/etc/grafana/provisioning/datasources:ro', 'grafana/grafana:12.4.14')
             grafana_port = docker('port', PREFIX + '-grafana', '3000/tcp').rsplit(':', 1)[1]
             api = 'http://127.0.0.1:' + grafana_port
             wait_for('Grafana ready', lambda: request(api + '/api/health').get('database') == 'ok', 60)
-            wait_for('all firing notifications routed with source alert names', lambda: all(delivered('/reading' if service == 'reading-garden-kotlin' else '/shared', 'firing', name) for name, service, _ in alerts), 150)
-            assert not any(delivered('/shared', 'firing', name) for name in ('ReadingGardenProbe', 'ReadingGardenSecond'))
-            assert not any(delivered('/reading', 'firing', name) for name in ('PawProbe', 'InfraProbe'))
+            wait_for('all firing notifications routed with source alert names', lambda: all(delivered(receiver(service, env), 'firing', name, env) for name, service, env in alerts), 150)
+            assert_no_cross_routing(alerts)
             # Inspect Grafana's alert instances: Discord's template intentionally omits service.
             def labels_preserved():
                 data = request(api + '/api/prometheus/grafana/api/v1/alerts')
@@ -134,9 +146,10 @@ scrape_configs:
                 return all(any(a.get('labels', {}).get('source_alert') == name and a['labels'].get('service') == service and a['labels'].get('env') == env and a.get('state', '').lower() in ('firing', 'alerting') for a in instances) for name, service, env in alerts)
             wait_for('source_alert, service and env preserved', labels_preserved, 30)
             active.remove('ReadingGardenProbe')
-            wait_for('one resolved while second remains firing', lambda: delivered('/reading', 'resolved', 'ReadingGardenProbe') and labels_preserved_except_one(api), 150)
+            wait_for('one resolved while second remains firing', lambda: delivered('/reading', 'resolved', 'ReadingGardenProbe', 'prod') and labels_preserved_except_one(api), 150)
             active.clear()
-            wait_for('remaining alerts resolved on their receivers', lambda: all(delivered('/reading' if service == 'reading-garden-kotlin' else '/shared', 'resolved', name) for name, service, _ in alerts), 150)
+            wait_for('remaining alerts resolved on their receivers', lambda: all(delivered(receiver(service, env), 'resolved', name, env) for name, service, env in alerts), 150)
+            assert_no_cross_routing(alerts)
             print('PASS: real Grafana to local Discord-compatible receiver; %d notifications' % len(messages))
         except Exception:
             print('Grafana logs:\n' + docker('logs', '--tail', '100', PREFIX + '-grafana', check=False), flush=True)
