@@ -7,6 +7,7 @@ ENV_FILE="${MONITORING_DIR}/.env"
 GRAFANA_URL="${GRAFANA_URL:-http://127.0.0.1:3000}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:9090}"
 LOKI_URL="${LOKI_URL:-http://127.0.0.1:3100}"
+TEMPO_URL="${TEMPO_URL:-http://127.0.0.1:3200}"
 VERIFY_TIMEOUT_SECONDS="${VERIFY_TIMEOUT_SECONDS:-120}"
 EXPECTED_ALERT_RULES=()
 while IFS= read -r name; do
@@ -249,6 +250,7 @@ wait_for_grafana_alerting() {
 
 wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"
 wait_for_http "${LOKI_URL}/ready" "Loki readiness"
+wait_for_http "${TEMPO_URL}/ready" "Tempo readiness"
 wait_for_http "http://127.0.0.1:12345/-/ready" "Alloy readiness"
 wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
@@ -260,7 +262,7 @@ for service in reading-garden pawtogether; do
   assert_prometheus_query_has_result "container_memory_working_set_bytes{job=\"cadvisor\",name=~\"${service}-prod-.*\"} > 0" "${service} container memory"
   assert_prometheus_query_has_result "container_cpu_usage_seconds_total{job=\"cadvisor\",name=~\"${service}-prod-.*\"} >= 0" "${service} container CPU"
 done
-for job in alloy loki grafana; do
+for job in alloy loki grafana tempo; do
   assert_prometheus_query_has_result "up{job=\"${job}\"} == 1" "$job"
 done
 assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://readinggarden.duckdns.org/api/health"} == 1' 'prod public health blackbox'
@@ -276,6 +278,12 @@ assert_loki_query_has_result '{unit="caddy.service"}' 'caddy systemd logs'
 
 wait_for_grafana_datasource
 wait_for_grafana_loki_datasource
+wait_for_http "${GRAFANA_URL}/api/health" "Grafana readiness"
+curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+  "${GRAFANA_URL}/api/datasources/uid/tempo/health" | python3 -c '
+import json, sys
+assert json.load(sys.stdin)["status"] == "OK", "Grafana Tempo datasource is unhealthy"
+'
 wait_for_grafana_dashboard_panels
 wait_for_grafana_logs_dashboard_panels
 wait_for_grafana_alerting

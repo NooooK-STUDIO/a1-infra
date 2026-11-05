@@ -101,7 +101,7 @@ groups:
           summary: Host memory usage is above 90 percent
 
       - alert: MonitoringTargetDown
-        expr: (up{job=~"prometheus|node-exporter|alloy|loki|grafana|blackbox-public-http|blackbox-local-caddy"} == 0) or absent(up{job="prometheus"}) or absent(up{job="node-exporter"}) or absent(up{job="alloy"}) or absent(up{job="loki"}) or absent(up{job="grafana"}) or absent(up{job="blackbox-public-http"}) or absent(up{job="blackbox-local-caddy"})
+        expr: (up{job=~"prometheus|node-exporter|alloy|loki|grafana|tempo|blackbox-public-http|blackbox-local-caddy"} == 0) or absent(up{job="prometheus"}) or absent(up{job="node-exporter"}) or absent(up{job="alloy"}) or absent(up{job="loki"}) or absent(up{job="grafana"}) or absent(up{job="tempo"}) or absent(up{job="blackbox-public-http"}) or absent(up{job="blackbox-local-caddy"})
         for: 2m
         labels:
           severity: warning
