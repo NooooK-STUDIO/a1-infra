@@ -76,6 +76,12 @@ assert_port_binding 18080 8080
 assert_port_binding 18081 8080
 assert_port_binding 19080 8081
 assert_port_binding 19081 8081
+printf '%s\n' "$CONFIG_OUTPUT" | ruby -ryaml -e '
+  config = YAML.load(STDIN.read)
+  %w[app-blue app-green].each do |service|
+    abort "#{service} must export HTTP histograms for p95" unless config.fetch("services").fetch(service).fetch("environment")["MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILESHISTOGRAM_HTTP_SERVER_REQUESTS"] == "true"
+  end
+'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'name: reading-garden-shared-backend'
 
 if printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'postgres:'; then

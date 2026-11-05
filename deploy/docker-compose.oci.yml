@@ -13,6 +13,8 @@ services:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
       - path: ${APP_HOST_DIR:?APP_HOST_DIR is required}/.tracing.env
         required: false
+    environment:
+      MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILESHISTOGRAM_HTTP_SERVER_REQUESTS: "true"
     volumes:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:${APP_DATA_MOUNT_TARGET:-/opt/reading-garden/data}
@@ -41,6 +43,8 @@ services:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/.runtime.env
       - path: ${APP_HOST_DIR:?APP_HOST_DIR is required}/.tracing.env
         required: false
+    environment:
+      MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILESHISTOGRAM_HTTP_SERVER_REQUESTS: "true"
     volumes:
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
       - ${APP_HOST_DIR:?APP_HOST_DIR is required}/data:${APP_DATA_MOUNT_TARGET:-/opt/reading-garden/data}

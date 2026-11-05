@@ -88,7 +88,29 @@ os.chmod(candidate, stat.S_IMODE(info.st_mode))
 PY
 iptables-restore --test < "$candidate"
 args=(-i "$bridge" -s "$subnet" -d "$gateway/32" -p tcp --dport 4318 -j ACCEPT)
-if ! iptables -C INPUT "${args[@]}"; then
+positions=$(iptables -S INPUT | python3 -c '
+import shlex, sys
+expected = sys.argv[1:]
+def options(tokens):
+    pairs = []
+    while tokens:
+        if len(tokens) < 2:
+            return None
+        key, value, *tokens = tokens
+        if (key, value) != ("-m", "tcp"):
+            pairs.append((key, value))
+    return sorted(pairs)
+wanted = options(expected)
+position = 0
+for line in sys.stdin:
+    tokens = shlex.split(line)
+    if tokens[:2] == ["-A", "INPUT"]:
+        position += 1
+        if options(tokens[2:]) == wanted:
+            print(position)
+' "${args[@]}")
+if [ "${positions%%$'\n'*}" != 1 ]; then
+  # Keep older copies: deleting by a saved index could remove an unrelated rule after a concurrent insert.
   iptables -I INPUT 1 "${args[@]}"
 fi
 if ! cmp -s "$rules_file" "$candidate"; then
