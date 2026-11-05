@@ -5,6 +5,7 @@ CONFIG_OUTPUT="$(
   GRAFANA_ADMIN_PASSWORD=secret-admin \
   NOOOOK_DISCORD_WEBHOOK_URL=https://example.invalid/nooook-discord-webhook \
   GRAFANA_DISCORD_PROD_WEBHOOK_URL=https://example.invalid/prod-discord-webhook \
+  GRAFANA_DISCORD_PAW_WEBHOOK_URL=https://example.invalid/paw-webhook \
   POSTGRES_EXPORTER_PASSWORD=postgres-exporter-secret \
   docker compose -f deploy/monitoring/docker-compose.monitoring.yml config
 )"
@@ -145,6 +146,11 @@ printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_HTTP_ADDR: 127.0.0.1'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GF_SERVER_ROOT_URL: https://nooook-monitoring.duckdns.org'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'NOOOOK_DISCORD_WEBHOOK_URL: https://example.invalid/nooook-discord-webhook'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'GRAFANA_DISCORD_PROD_WEBHOOK_URL: https://example.invalid/prod-discord-webhook'
+assert_service_contains grafana 'GRAFANA_DISCORD_PAW_WEBHOOK_URL: https://example.invalid/paw-webhook'
+if env -u GRAFANA_DISCORD_PAW_WEBHOOK_URL GRAFANA_ADMIN_PASSWORD=fixture NOOOOK_DISCORD_WEBHOOK_URL=fixture GRAFANA_DISCORD_PROD_WEBHOOK_URL=fixture POSTGRES_EXPORTER_PASSWORD=fixture docker compose -f deploy/monitoring/docker-compose.monitoring.yml config >/dev/null 2>&1; then
+    echo 'Paw webhook must be required' >&2
+    exit 1
+fi
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q -- '--web.listen-address=127.0.0.1:9115'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q -- '--web.listen-address=127.0.0.1:9187'
 printf '%s\n' "$CONFIG_OUTPUT" | grep -q 'DATA_SOURCE_URI: 127.0.0.1:15432/postgres?sslmode=disable'

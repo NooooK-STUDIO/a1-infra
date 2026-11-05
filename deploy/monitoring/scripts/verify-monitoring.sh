@@ -209,12 +209,14 @@ wait_for_grafana_alerting() {
   until response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$contact_points_url")" &&
     printf '%s' "$response" | grep -Fq '"name":"nooook-discord"' &&
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-prod"' &&
+    printf '%s' "$response" | grep -Fq '"name":"pawtogether-discord-prod"' &&
     printf '%s' "$response" | grep -Fq '"type":"discord"' &&
     response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "${GRAFANA_URL}/api/v1/provisioning/templates/reading-garden-discord-template")" &&
     printf '%s' "$response" | grep -Fq 'reading_garden_discord.message' &&
     response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
     printf '%s' "$response" | grep -Fq '"receiver":"nooook-discord"' &&
-    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-prod"'; do
+    printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-prod"' &&
+    printf '%s' "$response" | grep -Fq '"receiver":"pawtogether-discord-prod"'; do
     if (( SECONDS >= deadline )); then
       echo "Grafana Discord alerting contact point or notification policy did not load within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1

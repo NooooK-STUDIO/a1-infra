@@ -13,7 +13,7 @@ with tempfile.TemporaryDirectory() as tmp:
     (root / 'docker-compose.yml').touch()
     (root / '.env').write_text('\n'.join(k + '=fixture' for k in [
         'GRAFANA_ADMIN_PASSWORD', 'NOOOOK_DISCORD_WEBHOOK_URL',
-        'GRAFANA_DISCORD_PROD_WEBHOOK_URL', 'POSTGRES_EXPORTER_PASSWORD']))
+        'GRAFANA_DISCORD_PROD_WEBHOOK_URL', 'GRAFANA_DISCORD_PAW_WEBHOOK_URL', 'POSTGRES_EXPORTER_PASSWORD']))
     docker = root / 'docker'
     docker.write_text('''#!/usr/bin/env bash
 set -eu
@@ -30,6 +30,14 @@ esac
     docker.chmod(0o755)
     calls = root / 'calls'
     env = dict(os.environ, PATH=str(root) + ':' + os.environ['PATH'], MONITORING_DIR=tmp, CALLS=str(calls))
+    env_file = root / '.env'
+    valid_env = env_file.read_text()
+    for invalid in ('', 'GRAFANA_DISCORD_PAW_WEBHOOK_URL='):
+        env_file.write_text('\n'.join(line for line in valid_env.splitlines() if not line.startswith('GRAFANA_DISCORD_PAW_WEBHOOK_URL=')) + '\n' + invalid + '\n')
+        calls.write_text('')
+        result = subprocess.run(['bash', str(source)], env=env, capture_output=True, text=True)
+        assert result.returncode != 0 and 'GRAFANA_DISCORD_PAW_WEBHOOK_URL' in result.stderr and not calls.read_text(), 'missing or empty Paw webhook must fail before Docker'
+    env_file.write_text(valid_env)
     for copied, fail, recreate in [(False, False, False), (True, False, False), (False, True, False), (False, False, True)]:
         calls.write_text('')
         result = subprocess.run(['bash', str(source)], env=dict(env, MIGRATED=str(int(copied)), FAIL_COPY=str(int(fail)), FAIL_RECREATE=str(int(recreate))), capture_output=True, text=True)
