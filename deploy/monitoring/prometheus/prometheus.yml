@@ -15,17 +15,6 @@ scrape_configs:
           service: monitoring
           component: prometheus
 
-  - job_name: reading-garden-dev-app
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets:
-          - 127.0.0.1:19090
-          - 127.0.0.1:19091
-        labels:
-          env: dev
-          service: reading-garden-kotlin
-          component: app
-
   - job_name: reading-garden-prod-app
     metrics_path: /actuator/prometheus
     static_configs:
@@ -80,12 +69,6 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-          - https://readinggarden-dev.duckdns.org/api/health
-        labels:
-          env: dev
-          service: reading-garden-kotlin
-          component: blackbox-public
-      - targets:
           - https://readinggarden.duckdns.org/api/health
         labels:
           env: prod
@@ -104,13 +87,6 @@ scrape_configs:
     params:
       module: [http_2xx]
     static_configs:
-      - targets:
-          - https://127.0.0.1/api/health
-        labels:
-          env: dev
-          hostname: readinggarden-dev.duckdns.org
-          service: reading-garden-kotlin
-          component: blackbox-local-caddy
       - targets:
           - https://127.0.0.1/api/health
         labels:

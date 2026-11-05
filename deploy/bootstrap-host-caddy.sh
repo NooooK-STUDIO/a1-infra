@@ -37,7 +37,6 @@ install -d -m 755 \
 
 install -d -m 755 "${HOST_CADDY_LOG_DIR}"
 touch \
-    "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
     "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log" \
     "${HOST_CADDY_LOG_DIR}/pawtogether-dev-access.log" \
     "${HOST_CADDY_LOG_DIR}/pawtogether-prod-access.log" \
@@ -46,13 +45,11 @@ if id caddy >/dev/null 2>&1; then
     caddy_group="$(id -gn caddy)"
     chown caddy:"${caddy_group}" \
         "${HOST_CADDY_LOG_DIR}" \
-        "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
         "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log" \
         "${HOST_CADDY_LOG_DIR}/pawtogether-dev-access.log" \
         "${HOST_CADDY_LOG_DIR}/pawtogether-prod-access.log" \
         "${HOST_CADDY_LOG_DIR}/nooook-monitoring-access.log"
     chmod 644 \
-        "${HOST_CADDY_LOG_DIR}/reading-garden-dev-access.log" \
         "${HOST_CADDY_LOG_DIR}/reading-garden-prod-access.log" \
         "${HOST_CADDY_LOG_DIR}/pawtogether-dev-access.log" \
         "${HOST_CADDY_LOG_DIR}/pawtogether-prod-access.log" \
@@ -75,6 +72,10 @@ if [[ -d "${HOST_CADDY_STAGE_DIR}/sites" ]]; then
         done
 fi
 
+# Retire only the obsolete ReadingGarden dev route; preserve all other host sites.
+rm -f "${HOST_CADDY_CONFIG_DIR}/sites/reading-garden-dev.caddy" \
+    "${HOST_CADDY_CONFIG_DIR}/upstreams/reading-garden-dev.caddy"
+
 install_default_upstream() {
     local name="$1"
     local port="$2"
@@ -85,7 +86,6 @@ install_default_upstream() {
     fi
 }
 
-install_default_upstream reading-garden-dev 18090
 install_default_upstream reading-garden-prod 18080
 install_default_upstream pawtogether-dev 18100
 install_default_upstream pawtogether-prod 18110

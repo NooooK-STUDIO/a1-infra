@@ -48,8 +48,6 @@ export POSTGRES_SUPERUSER="${POSTGRES_SUPERUSER:-postgres}"
 load_secret_env POSTGRES_SUPERUSER_PASSWORD "${POSTGRES_SECRETS_DIR}/postgres_superuser.password"
 load_optional_secret_env READING_GARDEN_PROD_APP_PASSWORD "${POSTGRES_SECRETS_DIR}/reading_garden_prod_app.password"
 load_optional_secret_env READING_GARDEN_PROD_MIGRATOR_PASSWORD "${POSTGRES_SECRETS_DIR}/reading_garden_prod_migrator.password"
-load_optional_secret_env READING_GARDEN_DEV_APP_PASSWORD "${POSTGRES_SECRETS_DIR}/reading_garden_dev_app.password"
-load_optional_secret_env READING_GARDEN_DEV_MIGRATOR_PASSWORD "${POSTGRES_SECRETS_DIR}/reading_garden_dev_migrator.password"
 load_optional_secret_env PAWTOGETHER_PROD_APP_PASSWORD "${POSTGRES_SECRETS_DIR}/pawtogether_prod_app.password"
 load_optional_secret_env PAWTOGETHER_PROD_MIGRATOR_PASSWORD "${POSTGRES_SECRETS_DIR}/pawtogether_prod_migrator.password"
 load_optional_secret_env PAWTOGETHER_DEV_APP_PASSWORD "${POSTGRES_SECRETS_DIR}/pawtogether_dev_app.password"
@@ -134,7 +132,6 @@ BASH
 }
 
 ensure_app_database reading_garden_prod reading_garden_prod_app "${READING_GARDEN_PROD_APP_PASSWORD:-}" reading_garden_prod_migrator "${READING_GARDEN_PROD_MIGRATOR_PASSWORD:-}"
-ensure_app_database reading_garden_dev reading_garden_dev_app "${READING_GARDEN_DEV_APP_PASSWORD:-}" reading_garden_dev_migrator "${READING_GARDEN_DEV_MIGRATOR_PASSWORD:-}"
 ensure_app_database pawtogether_prod pawtogether_prod_app "${PAWTOGETHER_PROD_APP_PASSWORD:-}" pawtogether_prod_migrator "${PAWTOGETHER_PROD_MIGRATOR_PASSWORD:-}"
 ensure_app_database pawtogether_dev pawtogether_dev_app "${PAWTOGETHER_DEV_APP_PASSWORD:-}" pawtogether_dev_migrator "${PAWTOGETHER_DEV_MIGRATOR_PASSWORD:-}"
 

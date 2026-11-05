@@ -33,6 +33,11 @@ cat > "${TMP_DIR}/stage/systemd/caddy.service.d/override.conf" <<'EOF'
 ExecReload=
 ExecReload=/usr/bin/caddy reload --address unix//var/lib/caddy/caddy-admin.sock --config /etc/caddy/Caddyfile --adapter caddyfile --force
 EOF
+mkdir -p "${TMP_DIR}/config/sites" "${TMP_DIR}/config/upstreams"
+printf 'stale\n' > "${TMP_DIR}/config/sites/reading-garden-dev.caddy"
+printf 'stale\n' > "${TMP_DIR}/config/upstreams/reading-garden-dev.caddy"
+printf 'keep\n' > "${TMP_DIR}/config/sites/unrelated.caddy"
+printf 'keep\n' > "${TMP_DIR}/config/upstreams/pawtogether-dev.caddy"
 printf 'certdata\n' > "${TMP_DIR}/docker-data/test.txt"
 printf 'configdata\n' > "${TMP_DIR}/docker-config/test.txt"
 
@@ -67,7 +72,13 @@ HOST_CADDY_STATE_CONFIG_DIR="${TMP_DIR}/state-config" \
 grep -Fq 'admin unix//var/lib/caddy/caddy-admin.sock' "${TMP_DIR}/config/Caddyfile"
 test -f "${TMP_DIR}/config/common/proxy_common.caddy"
 test -f "${TMP_DIR}/config/sites/example.caddy"
-test -d "${TMP_DIR}/logs"
+test ! -e "${TMP_DIR}/config/sites/reading-garden-dev.caddy"
+test ! -e "${TMP_DIR}/config/upstreams/reading-garden-dev.caddy"
+test ! -e "${TMP_DIR}/logs/reading-garden-dev-access.log"
+grep -Fq keep "${TMP_DIR}/config/sites/unrelated.caddy"
+grep -Fq keep "${TMP_DIR}/config/upstreams/pawtogether-dev.caddy"
+test -f "${TMP_DIR}/logs/reading-garden-prod-access.log"
+test -f "${TMP_DIR}/logs/pawtogether-dev-access.log"
 test -f "${TMP_DIR}/systemd/caddy.service.d/override.conf"
 grep -Fq 'certdata' "${TMP_DIR}/state-data/test.txt"
 grep -Fq 'configdata' "${TMP_DIR}/state-config/test.txt"
