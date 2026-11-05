@@ -25,10 +25,11 @@ done
 
 Do not commit runtime `.env` files, service account JSON files, SSH keys, or host-specific credentials. Use the provided example files as templates only.
 
-## ReadingGarden dev retirement
+## Development environment retirement
 
-ReadingGarden prod, PawTogether dev/prod, and shared infrastructure remain configured.
-The host Caddy bootstrap removes only the retired ReadingGarden dev site and upstream;
+ReadingGarden dev and PawTogether dev are retired. Both production environments and
+shared infrastructure remain configured. The host Caddy bootstrap removes the retired
+development sites and upstreams;
 it does not delete access logs, databases, roles, or secret files. The monitoring
 provider removes the retired file-provisioned dashboard, while Grafana alert and
 contact point tombstones remove their provisioned resources. Apply the host Caddy,
