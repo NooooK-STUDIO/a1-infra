@@ -195,7 +195,7 @@
           "range": false
         }
       ],
-      "title": "Connection Capacity Used",
+      "title": "Connection Usage",
       "type": "stat",
       "description": "All PostgreSQL connections, including maintenance connections, as a percentage of max_connections."
     },
@@ -258,7 +258,7 @@
           "range": false
         }
       ],
-      "title": "Application Database Storage",
+      "title": "App Database Storage",
       "type": "stat",
       "description": "Combined ReadingGarden and PawTogether database storage. The trend below separates the databases."
     },
