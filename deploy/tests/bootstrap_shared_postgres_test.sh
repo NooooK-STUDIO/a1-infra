@@ -76,6 +76,9 @@ if grep -Fq 'APP_DB_NAME=reading_garden_dev' "${TMP_DIR}/docker.log"; then
     exit 1
 fi
 grep -Fq 'APP_DB_NAME=pawtogether_prod' "${TMP_DIR}/docker.log"
-grep -Fq 'APP_DB_NAME=pawtogether_dev' "${TMP_DIR}/docker.log"
+if grep -Fq 'APP_DB_NAME=pawtogether_dev' "${TMP_DIR}/docker.log"; then
+    echo 'retired PawTogether database was recreated' >&2
+    exit 1
+fi
 
 echo "PASS"

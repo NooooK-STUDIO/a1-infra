@@ -56,4 +56,3 @@ SQL
 
 ensure_database reading_garden_prod reading_garden_prod_app "${READING_GARDEN_PROD_APP_PASSWORD:-}" reading_garden_prod_migrator "${READING_GARDEN_PROD_MIGRATOR_PASSWORD:-}"
 ensure_database pawtogether_prod pawtogether_prod_app "${PAWTOGETHER_PROD_APP_PASSWORD:-}" pawtogether_prod_migrator "${PAWTOGETHER_PROD_MIGRATOR_PASSWORD:-}"
-ensure_database pawtogether_dev pawtogether_dev_app "${PAWTOGETHER_DEV_APP_PASSWORD:-}" pawtogether_dev_migrator "${PAWTOGETHER_DEV_MIGRATOR_PASSWORD:-}"
