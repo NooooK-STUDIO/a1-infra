@@ -8,7 +8,7 @@ Infrastructure and deployment assets for services running on OCI A1.
 - `deploy/blue-green-deploy.sh`: blue/green cutover script for host-managed Caddy.
 - `deploy/host-caddy/`: host `systemd` Caddy configuration templates.
 - `deploy/postgres/` and `deploy/docker-compose.postgres-shared.yml`: shared PostgreSQL bootstrap assets.
-- `deploy/monitoring/`: Phase 1 monitoring assets for Prometheus, Grafana, cAdvisor, node-exporter, and blackbox exporter. Alertmanager is deferred.
+- `deploy/monitoring/`: Monitoring for ReadingGarden, PawTogether, and shared services using Prometheus, Grafana, Loki, Alloy, and exporters. Grafana forwards firing Prometheus alerts to the existing Discord receivers.
 - `deploy/tests/`: shell tests for deployment configuration.
 
 ## Verification
@@ -19,6 +19,13 @@ Run deployment configuration tests from the repository root:
 for test_script in deploy/tests/*.sh; do
   bash "$test_script"
 done
+```
+
+The alert-delivery integration test runs real Grafana and Prometheus against a local
+Discord-compatible receiver, without contacting Discord:
+
+```bash
+python3 deploy/tests/monitoring_alert_delivery_test.py
 ```
 
 ## Secrets

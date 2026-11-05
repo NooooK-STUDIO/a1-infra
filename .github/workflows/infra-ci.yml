@@ -100,6 +100,9 @@ jobs:
             grafana/alloy:v1.9.1 \
             validate /etc/alloy/config.alloy
 
+      - name: Verify Grafana alert delivery and resolution
+        run: python3 deploy/tests/monitoring_alert_delivery_test.py
+
       - name: Check host Caddy config template
         run: |
           set -euo pipefail

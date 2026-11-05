@@ -188,9 +188,9 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "expr": "pg_database_size_bytes{job=\"postgres-exporter\",datname=\"reading_garden_prod\"}",
+          "expr": "pg_database_size_bytes{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}",
           "refId": "A",
-          "legendFormat": "reading_garden_prod"
+          "legendFormat": "{{datname}}"
         }
       ],
       "title": "Prod DB Size",
@@ -278,7 +278,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "expr": "pg_stat_database_numbackends{job=\"postgres-exporter\",datname=~\"reading_garden_prod|postgres\"}",
+          "expr": "pg_stat_database_numbackends{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod|postgres\"}",
           "refId": "A",
           "legendFormat": "{{datname}}"
         }
@@ -369,7 +369,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "expr": "pg_database_size_bytes{job=\"postgres-exporter\",datname=~\"reading_garden_prod\"}",
+          "expr": "pg_database_size_bytes{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}",
           "refId": "A",
           "legendFormat": "{{datname}}"
         }
@@ -459,7 +459,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "expr": "increase(pg_stat_database_deadlocks{job=\"postgres-exporter\",datname=~\"reading_garden_prod\"}[5m])",
+          "expr": "increase(pg_stat_database_deadlocks{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}[5m])",
           "refId": "A",
           "legendFormat": "{{datname}}"
         }
@@ -549,7 +549,7 @@
       "pluginVersion": "12.0.0",
       "targets": [
         {
-          "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-exporter\",datname=~\"reading_garden_prod\"}[5m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-exporter\",datname=~\"reading_garden_prod\"}[5m])",
+          "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}[5m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}[5m])",
           "refId": "A",
           "legendFormat": "{{datname}}"
         }

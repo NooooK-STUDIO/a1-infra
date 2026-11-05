@@ -13,7 +13,7 @@ discovery.relabel "containers" {
 
   rule {
     source_labels = ["__meta_docker_container_name"]
-    regex         = "/reading-garden-prod-.*"
+    regex         = "/(reading-garden|pawtogether)-prod-.*"
     action        = "keep"
   }
 
@@ -57,9 +57,28 @@ loki.relabel "app_containers" {
 
   rule {
     source_labels = ["container"]
-    regex         = "reading-garden-prod-.*"
+    regex         = "(reading-garden|pawtogether)-prod-.*"
     action        = "keep"
   }
+  rule {
+    source_labels = ["container"]
+    regex         = "reading-garden-prod-.*"
+    target_label  = "service"
+    replacement   = "reading-garden-kotlin"
+  }
+
+  rule {
+    source_labels = ["container"]
+    regex         = "pawtogether-prod-.*"
+    target_label  = "service"
+    replacement   = "pawtogether"
+  }
+
+  rule {
+    target_label = "env"
+    replacement  = "prod"
+  }
+
 }
 
 loki.relabel "journal" {
@@ -86,12 +105,44 @@ local.file_match "caddy_access" {
       service = "caddy",
       source = "caddy_access",
     },
+    {
+      __address__ = "localhost",
+      __path__ = "/var/log/caddy/pawtogether-prod-access.log",
+      env = "prod",
+      host = "oracle-a1",
+      service = "caddy",
+      source = "caddy_access",
+    },
   ]
 }
 
 loki.source.file "caddy_access" {
   targets    = local.file_match.caddy_access.targets
+  // File positions include source labels; enrich only after reading.
+  forward_to = [loki.relabel.caddy_access.receiver]
+}
+
+loki.relabel "caddy_access" {
   forward_to = [loki.write.local.receiver]
+
+  rule {
+    source_labels = ["filename"]
+    regex         = "/var/log/caddy/reading-garden-prod-access\\.log"
+    target_label  = "service"
+    replacement   = "reading-garden-kotlin"
+  }
+
+  rule {
+    source_labels = ["filename"]
+    regex         = "/var/log/caddy/pawtogether-prod-access\\.log"
+    target_label  = "service"
+    replacement   = "pawtogether"
+  }
+
+  rule {
+    target_label = "component"
+    replacement  = "caddy"
+  }
 }
 
 loki.source.journal "caddy" {

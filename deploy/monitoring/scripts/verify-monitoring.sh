@@ -7,25 +7,21 @@ ENV_FILE="${MONITORING_DIR}/.env"
 GRAFANA_URL="${GRAFANA_URL:-http://127.0.0.1:3000}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:9090}"
 LOKI_URL="${LOKI_URL:-http://127.0.0.1:3100}"
-VERIFY_TIMEOUT_SECONDS="${VERIFY_TIMEOUT_SECONDS:-60}"
-EXPECTED_ALERT_RULES=(
-  ProdAppMetricsDown
-  ProdLocalCaddyHealthDown
-  ProdPublicExternalHealthDown
-  Prod5xxRateHigh
-  ProdAvgLatencyHigh
-  ProdHikariPendingConnections
-  CaddyMetricsDown
-  CaddyRequestLatencyHigh
-  CaddyReloadFailed
-  ContainerExporterDown
-  HostDiskAlmostFull
-  HostMemoryHigh
-  MonitoringTargetDown
-  PostgresExporterDown
-  PostgresConnectionsHigh
-  PostgresDeadlocksDetected
-)
+VERIFY_TIMEOUT_SECONDS="${VERIFY_TIMEOUT_SECONDS:-120}"
+EXPECTED_ALERT_RULES=()
+while IFS= read -r name; do
+  EXPECTED_ALERT_RULES+=("$name")
+done < <(awk '
+  function emit() { if (name != "") print name "|" service "|" environment }
+  /^[[:space:]]*- alert:/ { emit(); name=$3; service=""; environment="" }
+  /^[[:space:]]+service:/ { service=$2 }
+  /^[[:space:]]+env:/ { environment=$2 }
+  END { emit() }
+' "${MONITORING_DIR}"/prometheus/rules/*.yml)
+if [ "${#EXPECTED_ALERT_RULES[@]}" -eq 0 ]; then
+  echo "No expected Prometheus alert rules found" >&2
+  exit 1
+fi
 
 read_env_file() {
   local key="$1"
@@ -49,7 +45,7 @@ wait_for_http() {
   local label="$2"
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
 
-  until curl -fsS "$url" >/dev/null; do
+  until curl --connect-timeout 5 --max-time 15 -fsS "$url" >/dev/null; do
     if (( SECONDS >= deadline )); then
       echo "${label} did not become ready within ${VERIFY_TIMEOUT_SECONDS}s: ${url}" >&2
       exit 1
@@ -63,7 +59,7 @@ assert_prometheus_query_has_result() {
   local label="$2"
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
 
-  until curl -fsS -G --data-urlencode "query=${query}" "${PROMETHEUS_URL}/api/v1/query" | grep -Fq '"result":[{'; do
+  until curl --connect-timeout 5 --max-time 15 -fsS -G --data-urlencode "query=${query}" "${PROMETHEUS_URL}/api/v1/query" | grep -Fq '"result":[{'; do
     if (( SECONDS >= deadline )); then
       echo "Prometheus query returned no active result within ${VERIFY_TIMEOUT_SECONDS}s for ${label}: ${query}" >&2
       exit 1
@@ -77,7 +73,7 @@ assert_loki_query_has_result() {
   local label="$2"
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
 
-  until curl -fsS -G \
+  until curl --connect-timeout 5 --max-time 15 -fsS -G \
     --data-urlencode "query=${query}" \
     --data-urlencode "limit=1" \
     "${LOKI_URL}/loki/api/v1/query_range" | grep -Fq '"result":[{'; do
@@ -90,25 +86,28 @@ assert_loki_query_has_result() {
 }
 
 response_has_expected_alert_rules() {
-  local response="$1"
-  local expected_alert
-
-  printf '%s' "$response" | grep -Fq '"status":"success"' || return 1
-  printf '%s' "$response" | grep -Fq '"health":"ok"' || return 1
-
-  for expected_alert in "${EXPECTED_ALERT_RULES[@]}"; do
-    printf '%s' "$response" | grep -Fq "\"name\":\"${expected_alert}\"" || return 1
-  done
+  printf '%s' "$1" | python3 -c '
+import json, sys
+from collections import Counter
+response = json.load(sys.stdin)
+rules = [r for g in response.get("data", {}).get("groups", []) for r in g.get("rules", [])]
+counts = Counter("|".join([r.get("name", ""), r.get("labels", {}).get("service", ""), r.get("labels", {}).get("env", "")]) for r in rules)
+expected = sys.argv[1:]
+valid = response.get("status") == "success" and bool(expected)
+valid = valid and not (Counter(expected) - counts)
+valid = valid and all(r.get("health") == "ok" for r in rules)
+sys.exit(0 if valid else 1)
+' "${EXPECTED_ALERT_RULES[@]}"
 }
 
 wait_for_prometheus_rules() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
   local response
 
-  until response="$(curl -fsS "${PROMETHEUS_URL}/api/v1/rules")" &&
+  until response="$(curl --connect-timeout 5 --max-time 15 -fsS "${PROMETHEUS_URL}/api/v1/rules")" &&
     response_has_expected_alert_rules "$response"; do
     if (( SECONDS >= deadline )); then
-      echo "Prometheus did not load the expected phase 1 alert rules within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      echo "Prometheus did not load the expected healthy alert rules within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1
     fi
     sleep 2
@@ -118,7 +117,7 @@ wait_for_prometheus_rules() {
 wait_for_grafana_datasource() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
 
-  until curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+  until curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
     "${GRAFANA_URL}/api/datasources/uid/prometheus/health" | grep -Fq '"status":"OK"'; do
     if (( SECONDS >= deadline )); then
       echo "Grafana Prometheus datasource did not become healthy within ${VERIFY_TIMEOUT_SECONDS}s" >&2
@@ -131,7 +130,7 @@ wait_for_grafana_datasource() {
 wait_for_grafana_loki_datasource() {
   local deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
 
-  until curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+  until curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
     "${GRAFANA_URL}/api/datasources/uid/loki/health" | grep -Fq '"status":"OK"'; do
     if (( SECONDS >= deadline )); then
       echo "Grafana Loki datasource did not become healthy within ${VERIFY_TIMEOUT_SECONDS}s" >&2
@@ -147,7 +146,7 @@ wait_for_grafana_dashboard_panels() {
   local postgres_dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-postgres-overview"
   local response
 
-  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$prod_dashboard_url")" &&
+  until response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$prod_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Caddy p95 Duration" &&
     printf '%s' "$response" | grep -Fq "Host CPU Usage Percent" &&
     printf '%s' "$response" | grep -Fq "Prod Avg Latency" &&
@@ -156,7 +155,7 @@ wait_for_grafana_dashboard_panels() {
     printf '%s' "$response" | grep -Fq "Prod Active Alerts" &&
     printf '%s' "$response" | grep -Fq "Prod 5xx Rate" &&
     printf '%s' "$response" | grep -Fq "Hikari Active Connections" &&
-    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$postgres_dashboard_url")" &&
+    response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$postgres_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Postgres Exporter Up" &&
     printf '%s' "$response" | grep -Fq "Postgres Connections Percent" &&
     printf '%s' "$response" | grep -Fq "Database Size" &&
@@ -174,7 +173,7 @@ wait_for_grafana_logs_dashboard_panels() {
   local dashboard_url="${GRAFANA_URL}/api/dashboards/uid/reading-garden-logs"
   local response
 
-  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
+  until response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "Prod Recent Error Logs" &&
     printf '%s' "$response" | grep -Fq "App Container Logs" &&
     printf '%s' "$response" | grep -Fq "Prod App Logs" &&
@@ -193,24 +192,21 @@ wait_for_grafana_alerting() {
   local contact_points_url="${GRAFANA_URL}/api/v1/provisioning/contact-points"
   local policies_url="${GRAFANA_URL}/api/v1/provisioning/policies"
   local alert_rule_uids=(
-    grafana-prod-local-caddy-health
-    grafana-prod-public-external-health
-    grafana-prod-app-metrics
-    grafana-caddy-metrics
+    prometheus-alert-forwarder
     grafana-prod-app-error-logs
-    grafana-host-disk-full
+    grafana-paw-prod-app-error-logs
   )
   local response
   local rule_uid
   local all_rules_loaded
 
-  until response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$contact_points_url")" &&
+  until response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$contact_points_url")" &&
     printf '%s' "$response" | grep -Fq '"name":"nooook-discord"' &&
     printf '%s' "$response" | grep -Fq '"name":"reading-garden-discord-prod"' &&
     printf '%s' "$response" | grep -Fq '"type":"discord"' &&
-    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "${GRAFANA_URL}/api/v1/provisioning/templates/reading-garden-discord-template")" &&
+    response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "${GRAFANA_URL}/api/v1/provisioning/templates/reading-garden-discord-template")" &&
     printf '%s' "$response" | grep -Fq 'reading_garden_discord.message' &&
-    response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
+    response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$policies_url")" &&
     printf '%s' "$response" | grep -Fq '"receiver":"nooook-discord"' &&
     printf '%s' "$response" | grep -Fq '"receiver":"reading-garden-discord-prod"'; do
     if (( SECONDS >= deadline )); then
@@ -223,9 +219,9 @@ wait_for_grafana_alerting() {
   while true; do
     all_rules_loaded=true
     for rule_uid in "${alert_rule_uids[@]}"; do
-      if ! response="$(curl -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+      if ! response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
         "${GRAFANA_URL}/api/v1/provisioning/alert-rules/${rule_uid}")" ||
-        ! printf '%s' "$response" | grep -Fq '"ruleGroup":"reading-garden-alerts"'; then
+        ! printf '%s' "$response" | grep -Fq '"ruleGroup":"monitoring-alerts"'; then
         all_rules_loaded=false
         break
       fi
@@ -236,7 +232,7 @@ wait_for_grafana_alerting() {
     fi
 
     if (( SECONDS >= deadline )); then
-      echo "Grafana did not load the expected ReadingGarden alert rules within ${VERIFY_TIMEOUT_SECONDS}s" >&2
+      echo "Grafana did not load the expected monitoring alert rules within ${VERIFY_TIMEOUT_SECONDS}s" >&2
       exit 1
     fi
     sleep 2
@@ -245,11 +241,22 @@ wait_for_grafana_alerting() {
 
 wait_for_http "${PROMETHEUS_URL}/-/ready" "Prometheus readiness"
 wait_for_http "${LOKI_URL}/ready" "Loki readiness"
+wait_for_http "http://127.0.0.1:12345/-/ready" "Alloy readiness"
 wait_for_prometheus_rules
 assert_prometheus_query_has_result 'up{job="prometheus"} == 1' 'prometheus'
 assert_prometheus_query_has_result 'sum(up{job="reading-garden-prod-app"}) > 0' 'reading-garden-prod-app'
+assert_prometheus_query_has_result 'sum(up{job="pawtogether-prod-app"}) > 0' 'pawtogether-prod-app'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://pawtogether.duckdns.org/api/health"} == 1' 'PawTogether public health'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",instance="pawtogether.duckdns.org"} == 1' 'PawTogether local Caddy health'
+for service in reading-garden pawtogether; do
+  assert_prometheus_query_has_result "container_memory_working_set_bytes{job=\"cadvisor\",name=~\"${service}-prod-.*\"} > 0" "${service} container memory"
+  assert_prometheus_query_has_result "container_cpu_usage_seconds_total{job=\"cadvisor\",name=~\"${service}-prod-.*\"} >= 0" "${service} container CPU"
+done
+for job in alloy loki grafana; do
+  assert_prometheus_query_has_result "up{job=\"${job}\"} == 1" "$job"
+done
 assert_prometheus_query_has_result 'probe_success{job="blackbox-public-http",instance="https://readinggarden.duckdns.org/api/health"} == 1' 'prod public health blackbox'
-assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",env="prod"} == 1' 'prod local caddy health blackbox'
+assert_prometheus_query_has_result 'probe_success{job="blackbox-local-caddy",instance="readinggarden.duckdns.org"} == 1' 'prod local caddy health blackbox'
 assert_prometheus_query_has_result 'up{job="caddy"} == 1' 'caddy'
 assert_prometheus_query_has_result 'up{job="node-exporter"} == 1' 'node-exporter'
 assert_prometheus_query_has_result 'up{job="cadvisor"} == 1' 'cadvisor'
@@ -264,5 +271,33 @@ wait_for_grafana_loki_datasource
 wait_for_grafana_dashboard_panels
 wait_for_grafana_logs_dashboard_panels
 wait_for_grafana_alerting
+
+deadline=$((SECONDS + VERIFY_TIMEOUT_SECONDS))
+until curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+  "${GRAFANA_URL}/api/prometheus/grafana/api/v1/rules" | python3 -c '
+import json, sys
+response = json.load(sys.stdin)
+rules = [r for g in response.get("data", {}).get("groups", []) for r in g.get("rules", [])]
+assert len(rules) == 3, "Expected forwarding and both application log rules"
+assert all(r.get("health") == "ok" for r in rules), "Grafana rule evaluation failed"
+'; do
+  if (( SECONDS >= deadline )); then
+    echo "Grafana alert evaluation did not become healthy" >&2
+    exit 1
+  fi
+  sleep 2
+done
+
+for dashboard in pawtogether-prod-overview pawtogether-logs; do
+  curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" \
+    "${GRAFANA_URL}/api/dashboards/uid/${dashboard}" | python3 -c '
+import json, sys
+assert json.load(sys.stdin)["dashboard"]["panels"], "Missing dashboard panels"
+'
+done
+
+for service in reading-garden-kotlin pawtogether; do
+  assert_loki_query_has_result "{source=\"caddy_access\",service=\"${service}\"}" "${service} access logs"
+done
 
 echo "PASS: monitoring verification completed"

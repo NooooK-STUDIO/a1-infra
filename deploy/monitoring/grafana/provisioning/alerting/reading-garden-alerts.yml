@@ -15,14 +15,24 @@ deleteRules:
   - orgId: 1
     uid: grafana-dev-app-error-logs
 
+  - orgId: 1
+    uid: grafana-prod-local-caddy-health
+  - orgId: 1
+    uid: grafana-prod-public-external-health
+  - orgId: 1
+    uid: grafana-prod-app-metrics
+  - orgId: 1
+    uid: grafana-caddy-metrics
+  - orgId: 1
+    uid: grafana-host-disk-full
 groups:
 - orgId: 1
-  name: reading-garden-alerts
+  name: monitoring-alerts
   folder: ReadingGarden Alerts
   interval: 60s
   rules:
-  - uid: grafana-prod-local-caddy-health
-    title: GrafanaProdLocalCaddyHealthDown
+  - uid: prometheus-alert-forwarder
+    title: PrometheusAlertFiring
     condition: C
     data:
     - refId: A
@@ -35,27 +45,12 @@ groups:
           type: prometheus
           uid: prometheus
         editorMode: code
-        expr: 1 - max(probe_success{job="blackbox-local-caddy",env="prod"} or vector(0))
+        expr: 'label_replace(ALERTS{alertstate="firing"}, "source_alert", "$1", "alertname", "(.*)")'
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
         range: false
         refId: A
-    - refId: B
-      relativeTimeRange:
-        from: 0
-        to: 0
-      datasourceUid: __expr__
-      model:
-        datasource:
-          type: __expr__
-          uid: __expr__
-        expression: A
-        intervalMs: 1000
-        maxDataPoints: 43200
-        reducer: last
-        refId: B
-        type: reduce
     - refId: C
       relativeTimeRange:
         from: 0
@@ -65,194 +60,16 @@ groups:
         datasource:
           type: __expr__
           uid: __expr__
-        expression: "$B > 0"
+        expression: "$A > 0"
         intervalMs: 1000
         maxDataPoints: 43200
         refId: C
         type: math
-    noDataState: Alerting
+    noDataState: OK
     execErrState: Alerting
-    for: 1m
+    for: 0s
     annotations:
-      summary: Prod local Caddy health is down.
-    labels:
-      service: reading-garden
-      env: prod
-      severity: critical
-  - uid: grafana-prod-public-external-health
-    title: GrafanaProdPublicExternalHealthDown
-    condition: C
-    data:
-    - refId: A
-      relativeTimeRange:
-        from: 600
-        to: 0
-      datasourceUid: prometheus
-      model:
-        datasource:
-          type: prometheus
-          uid: prometheus
-        editorMode: code
-        expr: 1 - max(probe_success{job="blackbox-public-http",instance="https://readinggarden.duckdns.org/api/health"} or vector(0))
-        instant: true
-        intervalMs: 1000
-        maxDataPoints: 43200
-        range: false
-        refId: A
-    - refId: B
-      relativeTimeRange:
-        from: 0
-        to: 0
-      datasourceUid: __expr__
-      model:
-        datasource:
-          type: __expr__
-          uid: __expr__
-        expression: A
-        intervalMs: 1000
-        maxDataPoints: 43200
-        reducer: last
-        refId: B
-        type: reduce
-    - refId: C
-      relativeTimeRange:
-        from: 0
-        to: 0
-      datasourceUid: __expr__
-      model:
-        datasource:
-          type: __expr__
-          uid: __expr__
-        expression: "$B > 0"
-        intervalMs: 1000
-        maxDataPoints: 43200
-        refId: C
-        type: math
-    noDataState: Alerting
-    execErrState: Alerting
-    for: 5m
-    annotations:
-      summary: Prod public external health is down.
-    labels:
-      service: reading-garden
-      env: prod
-      severity: warning
-  - uid: grafana-prod-app-metrics
-    title: GrafanaProdAppMetricsDown
-    condition: C
-    data:
-    - refId: A
-      relativeTimeRange:
-        from: 600
-        to: 0
-      datasourceUid: prometheus
-      model:
-        datasource:
-          type: prometheus
-          uid: prometheus
-        editorMode: code
-        expr: 1 - clamp_max(sum(up{job="reading-garden-prod-app"} or vector(0)), 1)
-        instant: true
-        intervalMs: 1000
-        maxDataPoints: 43200
-        range: false
-        refId: A
-    - refId: B
-      relativeTimeRange:
-        from: 0
-        to: 0
-      datasourceUid: __expr__
-      model:
-        datasource:
-          type: __expr__
-          uid: __expr__
-        expression: A
-        intervalMs: 1000
-        maxDataPoints: 43200
-        reducer: last
-        refId: B
-        type: reduce
-    - refId: C
-      relativeTimeRange:
-        from: 0
-        to: 0
-      datasourceUid: __expr__
-      model:
-        datasource:
-          type: __expr__
-          uid: __expr__
-        expression: "$B > 0"
-        intervalMs: 1000
-        maxDataPoints: 43200
-        refId: C
-        type: math
-    noDataState: Alerting
-    execErrState: Alerting
-    for: 1m
-    annotations:
-      summary: Prod app Prometheus metrics are down.
-    labels:
-      service: reading-garden
-      env: prod
-      severity: critical
-  - uid: grafana-caddy-metrics
-    title: GrafanaCaddyMetricsDown
-    condition: C
-    data:
-    - refId: A
-      relativeTimeRange:
-        from: 600
-        to: 0
-      datasourceUid: prometheus
-      model:
-        datasource:
-          type: prometheus
-          uid: prometheus
-        editorMode: code
-        expr: 1 - max(up{job="caddy"} or vector(0))
-        instant: true
-        intervalMs: 1000
-        maxDataPoints: 43200
-        range: false
-        refId: A
-    - refId: B
-      relativeTimeRange:
-        from: 0
-        to: 0
-      datasourceUid: __expr__
-      model:
-        datasource:
-          type: __expr__
-          uid: __expr__
-        expression: A
-        intervalMs: 1000
-        maxDataPoints: 43200
-        reducer: last
-        refId: B
-        type: reduce
-    - refId: C
-      relativeTimeRange:
-        from: 0
-        to: 0
-      datasourceUid: __expr__
-      model:
-        datasource:
-          type: __expr__
-          uid: __expr__
-        expression: "$B > 0"
-        intervalMs: 1000
-        maxDataPoints: 43200
-        refId: C
-        type: math
-    noDataState: Alerting
-    execErrState: Alerting
-    for: 1m
-    annotations:
-      summary: Host Caddy metrics are down.
-    labels:
-      service: reading-garden
-      env: host
-      severity: critical
+      summary: Prometheus alert is firing; see source_alert and labels.
   - uid: grafana-prod-app-error-logs
     title: GrafanaProdAppErrorLogsDetected
     condition: C
@@ -309,29 +126,28 @@ groups:
       logs_dashboard: https://nooook-monitoring.duckdns.org/d/reading-garden-logs?orgId=1&from=now-30m&to=now
       logs_query: '{container=~"reading-garden-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"'
     labels:
-      service: reading-garden
+      service: reading-garden-kotlin
       env: prod
       signal: logs
       severity: warning
-  - uid: grafana-host-disk-full
-    title: GrafanaHostDiskAlmostFull
+  - uid: grafana-paw-prod-app-error-logs
+    title: GrafanaPawProdAppErrorLogsDetected
     condition: C
     data:
     - refId: A
       relativeTimeRange:
         from: 600
         to: 0
-      datasourceUid: prometheus
+      datasourceUid: loki
       model:
         datasource:
-          type: prometheus
-          uid: prometheus
+          type: loki
+          uid: loki
         editorMode: code
-        expr: (1 - (node_filesystem_avail_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{job="node-exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"})) * 100
-        instant: true
+        expr: 'sum(count_over_time({container=~"pawtogether-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)" [5m]))'
         intervalMs: 1000
         maxDataPoints: 43200
-        range: false
+        queryType: range
         refId: A
     - refId: B
       relativeTimeRange:
@@ -357,17 +173,20 @@ groups:
         datasource:
           type: __expr__
           uid: __expr__
-        expression: "$B > 85"
+        expression: "$B > 0"
         intervalMs: 1000
         maxDataPoints: 43200
         refId: C
         type: math
-    noDataState: NoData
+    noDataState: OK
     execErrState: Alerting
-    for: 5m
+    for: 1m
     annotations:
-      summary: Host root disk usage is above 85 percent.
+      summary: PawTogether prod app error logs were detected in Loki.
+      logs_dashboard: https://nooook-monitoring.duckdns.org/d/pawtogether-logs?orgId=1&from=now-30m&to=now
+      logs_query: '{container=~"pawtogether-prod-.*"} |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"'
     labels:
-      service: reading-garden
-      env: host
+      service: pawtogether
+      env: prod
+      signal: logs
       severity: warning

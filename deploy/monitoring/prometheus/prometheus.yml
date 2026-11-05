@@ -26,6 +26,41 @@ scrape_configs:
           service: reading-garden-kotlin
           component: app
 
+  - job_name: pawtogether-prod-app
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - 127.0.0.1:19110
+          - 127.0.0.1:19111
+        labels:
+          env: prod
+          service: pawtogether
+          component: app
+
+  - job_name: alloy
+    static_configs:
+      - targets: ["127.0.0.1:12345"]
+        labels:
+          env: infra
+          service: monitoring
+          component: alloy
+
+  - job_name: loki
+    static_configs:
+      - targets: ["127.0.0.1:3100"]
+        labels:
+          env: infra
+          service: monitoring
+          component: loki
+
+  - job_name: grafana
+    static_configs:
+      - targets: ["127.0.0.1:3000"]
+        labels:
+          env: infra
+          service: monitoring
+          component: grafana
+
   - job_name: caddy
     metrics_path: /metrics
     static_configs:
@@ -74,6 +109,12 @@ scrape_configs:
           env: prod
           service: reading-garden-kotlin
           component: blackbox-public
+      - targets:
+          - https://pawtogether.duckdns.org/api/health
+        labels:
+          env: prod
+          service: pawtogether
+          component: blackbox-public
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -93,6 +134,13 @@ scrape_configs:
           env: prod
           hostname: readinggarden.duckdns.org
           service: reading-garden-kotlin
+          component: blackbox-local-caddy
+      - targets:
+          - https://127.0.0.1/api/health
+        labels:
+          env: prod
+          hostname: pawtogether.duckdns.org
+          service: pawtogether
           component: blackbox-local-caddy
     relabel_configs:
       - source_labels: [__address__]

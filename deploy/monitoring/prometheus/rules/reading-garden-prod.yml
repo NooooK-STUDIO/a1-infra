@@ -2,7 +2,7 @@ groups:
   - name: reading-garden-prod
     rules:
       - alert: ProdAppMetricsDown
-        expr: sum(up{job="reading-garden-prod-app"}) == 0
+        expr: (sum(up{job="reading-garden-prod-app"}) or vector(0)) == 0
         for: 1m
         labels:
           severity: critical
@@ -13,7 +13,7 @@ groups:
           summary: ReadingGarden prod actuator metrics target is down
 
       - alert: ProdLocalCaddyHealthDown
-        expr: probe_success{job="blackbox-local-caddy",env="prod"} == 0
+        expr: (probe_success{job="blackbox-local-caddy",service="reading-garden-kotlin"} == 0) or absent(probe_success{job="blackbox-local-caddy",service="reading-garden-kotlin"})
         for: 1m
         labels:
           severity: critical
@@ -24,7 +24,7 @@ groups:
           summary: ReadingGarden prod local Caddy health probe is failing
 
       - alert: ProdPublicExternalHealthDown
-        expr: probe_success{job="blackbox-public-http",instance="https://readinggarden.duckdns.org/api/health"} == 0
+        expr: (probe_success{job="blackbox-public-http",service="reading-garden-kotlin"} == 0) or absent(probe_success{job="blackbox-public-http",service="reading-garden-kotlin"})
         for: 5m
         labels:
           severity: warning

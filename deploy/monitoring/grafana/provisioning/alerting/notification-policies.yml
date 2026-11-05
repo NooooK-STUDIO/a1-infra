@@ -6,6 +6,8 @@ policies:
     group_by:
       - grafana_folder
       - alertname
+      - source_alert
+      - service
       - env
     group_wait: 30s
     group_interval: 5m
@@ -15,25 +17,15 @@ policies:
         object_matchers:
           - - service
             - =
-            - reading-garden
+            - reading-garden-kotlin
           - - env
             - =
             - prod
         group_by:
           - grafana_folder
           - alertname
-          - env
-        group_wait: 30s
-        group_interval: 5m
-        repeat_interval: 4h
-      - receiver: nooook-discord
-        object_matchers:
-          - - service
-            - =
-            - reading-garden
-        group_by:
-          - grafana_folder
-          - alertname
+          - source_alert
+          - service
           - env
         group_wait: 30s
         group_interval: 5m
