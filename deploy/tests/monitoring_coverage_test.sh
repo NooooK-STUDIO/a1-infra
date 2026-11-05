@@ -73,6 +73,7 @@ RUBY
 
 TEST_DIR="$(mktemp -d)"
 trap 'rm -r "$TEST_DIR"' EXIT
+chmod 755 "$TEST_DIR"
 cat > "$TEST_DIR/rules-test.yml" <<'YAML'
 rule_files:
   - /rules/reading-garden-prod.yml
