@@ -24,7 +24,20 @@ apps.each do |project, (service, targets, hostname)|
   assert(rules.size == 6 && rules.all? { |r| r['labels']['service'] == service }, "#{project} rules")
   assert(rules[0]['expr'].include?('or vector(0)') && rules[1..2].all? { |r| r['expr'].include?("service=\"#{service}\"") && r['expr'].include?('absent(') }, "#{project} absent and probe isolation")
   dash = JSON.parse(File.read("#{root}/grafana/dashboards/#{project}/#{project}-logs.json"))
-  assert(dash['panels'].to_s.include?(service), "#{project} dashboard labels")
+  assert(dash['uid'] == "#{project}-logs" && dash['title'] == (project == 'reading-garden' ? 'ReadingGarden Logs' : 'PawTogether Logs'), "#{project} log dashboard identity")
+  panels = dash.fetch('panels')
+  assert(panels.map { |p| p['id'] }.sort == [1, 5, 7], "#{project} must have exactly three log panels")
+  error_filter = ' |~ "(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)" !~ "(?i)(no error|error page|error dispatch)" !~ "(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)"'
+  container_query = "{container=~\"#{project}-prod-.*\"}"
+  expected = {7 => ['Application Errors', container_query + error_filter], 1 => ['Application Logs', container_query], 5 => ['HTTP Access Logs', "{source=\"caddy_access\",env=\"prod\",service=\"#{service}\"}"]}
+  panels.each do |panel|
+    title, expression = expected.fetch(panel['id'])
+    assert(panel['type'] == 'logs' && panel['title'] == title && panel.dig('gridPos', 'w') == 24 && panel.dig('gridPos', 'x') == 0 && panel.fetch('targets').map { |t| t['expr'] } == [expression], "#{project} panel #{panel['id']} query, layout or title")
+  end
+  other = project == 'reading-garden' ? 'pawtogether' : 'reading-garden'
+  ["#{project}-prod-overview", "#{other}-logs", 'a1-shared-logs'].each do |uid|
+    assert(dash.fetch('links').any? { |link| link['keepTime'] == true && link.fetch('url', '').match?(%r{^/d/#{Regexp.escape(uid)}(?:[/?]|$)}) }, "#{project} log dashboard link to #{uid}")
+  end
   overview = JSON.parse(File.read("#{root}/grafana/dashboards/#{project}/#{project}-prod-overview.json"))
   overview.fetch('panels').each do |panel|
     panel.fetch('targets', []).each do |target|
@@ -34,6 +47,15 @@ apps.each do |project, (service, targets, hostname)|
     end
   end
 end
+shared_logs = JSON.parse(File.read("#{root}/grafana/dashboards/shared/a1-shared-logs.json"))
+assert(shared_logs['uid'] == 'a1-shared-logs' && shared_logs['title'] == 'A1 Shared Logs', 'shared logs identity')
+shared_panels = shared_logs.fetch('panels')
+assert(shared_panels.size == 1 && shared_panels[0]['id'] == 4 && shared_panels[0]['title'] == 'Caddy Service Logs' && shared_panels[0]['type'] == 'logs' && shared_panels[0].dig('gridPos', 'w') == 24 && shared_panels[0].dig('gridPos', 'x') == 0 && shared_panels[0].fetch('targets').map { |t| t['expr'] } == ['{unit="caddy.service"}'], 'shared journal belongs only in the shared logs panel')
+%w[a1-shared-overview reading-garden-logs pawtogether-logs].each do |uid|
+  assert(shared_logs.fetch('links').any? { |link| link['keepTime'] == true && link.fetch('url', '').match?(%r{^/d/#{Regexp.escape(uid)}(?:[/?]|$)}) }, "shared log dashboard link to #{uid}")
+end
+shared_overview = JSON.parse(File.read("#{root}/grafana/dashboards/shared/a1-shared-overview.json"))
+assert(shared_overview.fetch('links').any? { |link| link['keepTime'] == true && link.fetch('url', '').match?(%r{^/d/a1-shared-logs(?:[/?]|$)}) }, 'shared overview link to shared logs')
 %w[alloy loki grafana].zip(%w[12345 3100 3000]).each { |name, port| assert(jobs.fetch(name)['static_configs'][0]['targets'] == ["127.0.0.1:#{port}"], "#{name} scrape") }
 alloy = File.read("#{root}/alloy/config.alloy")
 assert(alloy.include?('(reading-garden|pawtogether)-prod-.*') && apps.keys.all? { |p| alloy.include?("/var/log/caddy/#{p}-prod-access.log") } && apps.values.all? { |v| alloy.include?(v[0]) }, 'log collection')
@@ -78,6 +100,42 @@ assert(File.read("#{root}/grafana/provisioning/alerting/notification-templates.y
 assert(File.read("#{root}/grafana/dashboards/shared/shared-postgres-overview.json").include?('pawtogether_prod'), 'database dashboard')
 puts 'Monitoring coverage configuration checks passed'
 RUBY
+
+python3 <<'PYTEST'
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
+script = Path('deploy/monitoring/scripts/verify-monitoring.sh').read_text()
+function = script[script.index('wait_for_grafana_logs_dashboard_panels() {'):script.index('\nwait_for_grafana_alerting()')]
+paths = {
+    'reading-garden-logs': 'reading-garden/reading-garden-logs.json',
+    'pawtogether-logs': 'pawtogether/pawtogether-logs.json',
+    'a1-shared-logs': 'shared/a1-shared-logs.json',
+}
+with tempfile.TemporaryDirectory() as directory:
+    dashboards = {uid: json.loads((Path('deploy/monitoring/grafana/dashboards') / path).read_text()) for uid, path in paths.items()}
+    def verify():
+        for uid, dashboard in dashboards.items():
+            (Path(directory) / uid).write_text(json.dumps({'dashboard': dashboard}))
+        shell = """GRAFANA_URL=http://grafana
+GRAFANA_ADMIN_USER=user
+GRAFANA_ADMIN_PASSWORD=password
+VERIFY_TIMEOUT_SECONDS=0
+curl() { local url="${@: -1}"; cat "$FIXTURE_DIR/${url##*/}"; }
+""" + function + '\nwait_for_grafana_logs_dashboard_panels'
+        return subprocess.run(['bash', '-c', shell], env={**os.environ, 'FIXTURE_DIR': directory}, capture_output=True, text=True)
+    assert verify().returncode == 0, 'verifier must accept all three log dashboards'
+    for uid, dashboard in dashboards.items():
+        title = dashboard['panels'][0]['title']
+        dashboard['panels'][0]['title'] = 'incorrect'
+        result = verify()
+        assert result.returncode != 0 and uid in result.stderr, f'verifier must reject a wrong panel in {uid}'
+        dashboard['panels'][0]['title'] = title
+print('Monitoring log dashboard runtime verifier checks passed')
+PYTEST
 
 TEST_DIR="$(mktemp -d)"
 trap 'rm -r "$TEST_DIR"' EXIT

@@ -16,7 +16,8 @@ Infrastructure and deployment assets for services running on OCI A1.
 Dashboards and Grafana alert rules are grouped by ownership:
 
 - `A1 Shared`: A1 Shared Overview for host/proxy/collector health, Shared PostgreSQL
-  Overview for database capacity and activity, and the Prometheus alert forwarder.
+  Overview for database capacity and activity, A1 Shared Logs for Caddy service
+  events, and the Prometheus alert forwarder.
 - `ReadingGarden`: production overview, application logs, and application log alerts.
 - `PawTogether`: production overview, application logs, and application log alerts.
 
@@ -26,6 +27,13 @@ Notification routing continues to use service/environment labels.
 Application overviews show only that application's health, traffic, runtime resources,
 and connection pool. Overview links retain the selected time range when moving
 between applications, shared infrastructure, PostgreSQL, and application logs.
+Each application log dashboard shows errors, application output, and its own HTTP
+access logs without duplicate application panels. Caddy service events belong to
+the shared log dashboard. Log dashboard links retain the selected time range when
+returning to an overview or moving between log dashboards.
+Application output includes older logs collected before service labels were added.
+An empty log panel can mean no matching entries in the selected range or missing
+collection; it does not by itself prove the application is healthy.
 
 ## Verification
 
