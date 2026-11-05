@@ -64,7 +64,7 @@ grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-gard
 grep -Fq 'reading-garden-postgres-overview' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'Shared PostgreSQL Overview' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'PostgreSQL Health' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
-grep -Fq 'Connection Capacity Used' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'Connection Usage' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'pg_up{job=\"postgres-exporter\"}' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq '{source=\"docker\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json

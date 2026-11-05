@@ -266,7 +266,7 @@
     {
       "id": 32,
       "type": "stat",
-      "title": "Firing Infrastructure Alerts",
+      "title": "Firing Infra Alerts",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -322,7 +322,7 @@
         {
           "refId": "A",
           "expr": "sum(ALERTS{env=\"infra\",alertstate=\"firing\"}) or vector(0)",
-          "legendFormat": "Firing Infrastructure Alerts",
+          "legendFormat": "Firing Infra Alerts",
           "instant": true,
           "range": false
         }
@@ -1399,7 +1399,7 @@
     {
       "id": 45,
       "type": "stat",
-      "title": "PostgreSQL Exporter",
+      "title": "PG Exporter",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1469,7 +1469,7 @@
         {
           "refId": "A",
           "expr": "up{job=\"postgres-exporter\"}",
-          "legendFormat": "PostgreSQL Exporter",
+          "legendFormat": "PG Exporter",
           "instant": true,
           "range": false
         }

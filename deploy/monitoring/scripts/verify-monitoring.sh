@@ -155,7 +155,7 @@ wait_for_grafana_dashboard_panels() {
     printf '%s' "$response" | grep -Fq "Active DB Connections" &&
     response="$(curl --connect-timeout 5 --max-time 15 -fsS -u "${GRAFANA_ADMIN_USER}:${GRAFANA_ADMIN_PASSWORD}" "$postgres_dashboard_url")" &&
     printf '%s' "$response" | grep -Fq "PostgreSQL Health" &&
-    printf '%s' "$response" | grep -Fq "Connection Capacity Used" &&
+    printf '%s' "$response" | grep -Fq "Connection Usage" &&
     printf '%s' "$response" | grep -Fq "Storage by Database" &&
     printf '%s' "$response" | grep -Fq "Deadlocks"; do
     if (( SECONDS >= deadline )); then
