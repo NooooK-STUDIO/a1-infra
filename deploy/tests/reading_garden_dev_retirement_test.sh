@@ -4,7 +4,7 @@ set -euo pipefail
 ruby <<'RUBY'
 require 'yaml'
 require 'json'
-alerts = YAML.load_file('deploy/monitoring/grafana/provisioning/alerting/reading-garden-alerts.yml')
+alerts = YAML.load_file('deploy/monitoring/grafana/provisioning/alerting/monitoring-alerts.yml')
 expected = %w[grafana-dev-external-health grafana-dev-local-caddy-health grafana-dev-public-external-health grafana-dev-app-metrics grafana-dev-app-error-logs]
 deleted = alerts.fetch('deleteRules').select { |r| r['orgId'] == 1 }.map { |r| r.fetch('uid') }
 raise 'missing Grafana rule tombstones' unless (expected - deleted).empty?
@@ -24,7 +24,7 @@ raise 'retired scrape job active' if config.fetch('scrape_configs').any? { |c| c
 raise 'production scrape job missing' unless config.fetch('scrape_configs').any? { |c| c['job_name'] == 'reading-garden-prod-app' }
 shared = YAML.load_file('deploy/monitoring/prometheus/rules/shared-infra.yml').fetch('groups').flat_map { |g| g.fetch('rules') }.map { |r| r.fetch('alert') }
 raise 'shared alerts missing' unless (%w[CaddyMetricsDown HostMemoryHigh PostgresExporterDown PostgresConnectionsHigh PostgresDeadlocksDetected] - shared).empty?
-%w[reading-garden-logs.json reading-garden-postgres-overview.json].each do |file|
+%w[reading-garden/reading-garden-logs.json shared/shared-postgres-overview.json].each do |file|
   dashboard = JSON.parse(File.read("deploy/monitoring/grafana/dashboards/#{file}"))
   raise 'retired panel remains' if dashboard.fetch('panels').any? { |panel| panel.fetch('title', '').start_with?('Dev ') }
 end
