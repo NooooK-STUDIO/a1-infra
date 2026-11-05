@@ -17,9 +17,44 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "links": [],
+  "graphTooltip": 1,
+  "links": [
+    {
+      "title": "A1 Shared",
+      "type": "link",
+      "url": "/d/a1-shared-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "ReadingGarden",
+      "type": "link",
+      "url": "/d/reading-garden-prod-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "PawTogether",
+      "type": "link",
+      "url": "/d/pawtogether-prod-overview",
+      "targetBlank": false,
+      "keepTime": true
+    }
+  ],
   "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "PostgreSQL Server",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      }
+    },
     {
       "datasource": {
         "type": "prometheus",
@@ -27,32 +62,50 @@
       },
       "fieldConfig": {
         "defaults": {
-          "mappings": [],
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "red",
+                "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 1
               }
             ]
+          },
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
         "x": 0,
-        "y": 0
+        "y": 1,
+        "w": 6,
+        "h": 4
       },
       "id": 1,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -67,15 +120,17 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "expr": "pg_up{job=\"postgres-exporter\"}",
           "refId": "A",
-          "legendFormat": "postgres-exporter"
+          "legendFormat": "postgres-exporter",
+          "instant": true,
+          "range": false
         }
       ],
-      "title": "Postgres Exporter Up",
+      "title": "PostgreSQL Health",
       "type": "stat"
     },
     {
@@ -90,7 +145,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -98,20 +154,23 @@
               }
             ]
           },
-          "unit": "percent"
+          "unit": "percent",
+          "color": {
+            "mode": "thresholds"
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
         "x": 6,
-        "y": 0
+        "y": 1,
+        "w": 6,
+        "h": 4
       },
       "id": 2,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -126,16 +185,19 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "expr": "sum(pg_stat_database_numbackends{job=\"postgres-exporter\"}) / max(pg_settings_max_connections{job=\"postgres-exporter\"}) * 100",
           "refId": "A",
-          "legendFormat": "connections used"
+          "legendFormat": "connections used",
+          "instant": true,
+          "range": false
         }
       ],
-      "title": "Postgres Connections Percent",
-      "type": "stat"
+      "title": "Connection Capacity Used",
+      "type": "stat",
+      "description": "All PostgreSQL connections, including maintenance connections, as a percentage of max_connections."
     },
     {
       "datasource": {
@@ -149,28 +211,29 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "bytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
         "x": 12,
-        "y": 0
+        "y": 1,
+        "w": 6,
+        "h": 4
       },
       "id": 3,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -185,16 +248,97 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
-          "expr": "pg_database_size_bytes{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}",
+          "expr": "sum(pg_database_size_bytes{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"})",
           "refId": "A",
-          "legendFormat": "{{datname}}"
+          "legendFormat": "application databases",
+          "instant": true,
+          "range": false
         }
       ],
-      "title": "Prod DB Size",
-      "type": "stat"
+      "title": "Application Database Storage",
+      "type": "stat",
+      "description": "Combined ReadingGarden and PawTogether database storage. The trend below separates the databases."
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Firing Database Alerts",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(ALERTS{env=\"infra\",service=\"postgres\",alertstate=\"firing\"}) or vector(0)",
+          "legendFormat": "Firing Database Alerts",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Database Capacity",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      }
     },
     {
       "datasource": {
@@ -244,11 +388,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           }
@@ -256,10 +397,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 0,
-        "y": 4
+        "y": 6,
+        "w": 12,
+        "h": 8
       },
       "id": 5,
       "options": {
@@ -275,7 +416,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "expr": "pg_stat_database_numbackends{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod|postgres\"}",
@@ -283,7 +424,7 @@
           "legendFormat": "{{datname}}"
         }
       ],
-      "title": "Connections By Database",
+      "title": "Connections by Database",
       "type": "timeseries"
     },
     {
@@ -334,11 +475,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
@@ -347,10 +485,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 12,
-        "y": 4
+        "y": 6,
+        "w": 12,
+        "h": 8
       },
       "id": 6,
       "options": {
@@ -366,7 +504,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "expr": "pg_database_size_bytes{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}",
@@ -374,98 +512,21 @@
           "legendFormat": "{{datname}}"
         }
       ],
-      "title": "Database Size",
+      "title": "Storage by Database",
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
+      "id": 102,
+      "type": "row",
+      "title": "Transactions & Contention",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 0,
-        "y": 12
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "expr": "increase(pg_stat_database_deadlocks{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}[5m])",
-          "refId": "A",
-          "legendFormat": "{{datname}}"
-        }
-      ],
-      "title": "Deadlocks",
-      "type": "timeseries"
+        "y": 14,
+        "w": 24,
+        "h": 1
+      }
     },
     {
       "datasource": {
@@ -515,22 +576,20 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
-          }
+          },
+          "unit": "ops"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "x": 0,
+        "y": 15,
         "w": 12,
-        "x": 12,
-        "y": 12
+        "h": 8
       },
       "id": 8,
       "options": {
@@ -546,7 +605,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}[5m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}[5m])",
@@ -554,7 +613,94 @@
           "legendFormat": "{{datname}}"
         }
       ],
-      "title": "Transactions",
+      "title": "Transactions / sec",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "expr": "increase(pg_stat_database_deadlocks{job=\"postgres-exporter\",datname=~\"reading_garden_prod|pawtogether_prod\"}[5m])",
+          "refId": "A",
+          "legendFormat": "{{datname}}"
+        }
+      ],
+      "title": "Deadlocks (5m)",
       "type": "timeseries"
     }
   ],
@@ -577,5 +723,6 @@
   "timezone": "browser",
   "title": "Shared PostgreSQL Overview",
   "uid": "reading-garden-postgres-overview",
-  "version": 1
+  "version": 1,
+  "description": "Shared PostgreSQL capacity and per-database activity for ReadingGarden and PawTogether."
 }

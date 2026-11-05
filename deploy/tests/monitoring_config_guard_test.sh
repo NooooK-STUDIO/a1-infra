@@ -63,8 +63,8 @@ grep -Fq 'reading-garden-prod-overview' deploy/monitoring/grafana/dashboards/rea
 grep -Fq 'reading-garden-logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq 'reading-garden-postgres-overview' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'Shared PostgreSQL Overview' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
-grep -Fq 'Postgres Exporter Up' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
-grep -Fq 'Postgres Connections Percent' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'PostgreSQL Health' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
+grep -Fq 'Connection Capacity Used' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'pg_up{job=\"postgres-exporter\"}' deploy/monitoring/grafana/dashboards/shared/shared-postgres-overview.json
 grep -Fq 'ReadingGarden Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
 grep -Fq '{source=\"docker\",service=\"reading-garden-kotlin\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
@@ -89,16 +89,16 @@ grep -Fq 'path          = "/var/log/journal"' deploy/monitoring/alloy/config.all
 grep -Fq 'retention_period: 72h' deploy/monitoring/loki/loki.yml
 grep -Fq 'allow_structured_metadata: false' deploy/monitoring/loki/loki.yml
 grep -Fq '"from": "now-6h"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
-grep -Fq 'Prod Avg Latency' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq 'Prod Max Latency' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq 'Prod 5xx Rate' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq 'Prod p95 Latency' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq 'Prod Active Alerts' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq 'Prod Request Rate' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Average Response Time' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Maximum Response Time' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'HTTP 5xx Requests / sec' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'p95 Response Time' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Error Logs (30m)' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Firing Metric Alerts' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Requests / sec' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 grep -Fq 'histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"reading-garden-prod-app\"}[5m])))' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 grep -Fq 'sum(ALERTS{env=\"prod\",service=\"reading-garden-kotlin\",alertstate=\"firing\"}) or vector(0)' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq 'Hikari Active Connections' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq 'Active DB Connections' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 grep -Fq 'Process Uptime' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 grep -Fq 'jvm_threads_live_threads{job=\"reading-garden-prod-app\"}' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 grep -Fq 'job_name: reading-garden-prod-app' deploy/monitoring/prometheus/prometheus.yml
@@ -194,11 +194,11 @@ if rg -n 'assert_loki_query_has_result .*source="docker"' deploy/monitoring/scri
     echo "monitoring verification must not require app container logs on every run" >&2
     exit 1
 fi
-grep -Fq 'Prod Avg Latency' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Prod p95 Latency' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Average Response Time' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'p95 Response Time' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod Recent Error Logs' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Prod Active Alerts' deploy/monitoring/scripts/verify-monitoring.sh
-grep -Fq 'Caddy p95 Duration' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Firing Metric Alerts' deploy/monitoring/scripts/verify-monitoring.sh
+grep -Fq 'Host Resources' deploy/monitoring/grafana/dashboards/shared/a1-shared-overview.json
 grep -Fq 'App Container Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod App Logs' deploy/monitoring/scripts/verify-monitoring.sh
 grep -Fq 'Prod Recent Error Logs' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-logs.json
@@ -220,7 +220,7 @@ if rg -n 'RUNBOOK|SECURITY\\.md|runbook_url|^[[:space:]]*runbook:' deploy/monito
 fi
 grep -Fq '"legendFormat": "{{status}}"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
 grep -Fq '"legendFormat": "{{id}}"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
-grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/reading-garden/reading-garden-prod-overview.json
+grep -Fq '"legendFormat": "{{code}}"' deploy/monitoring/grafana/dashboards/shared/a1-shared-overview.json
 if rg -n 'PROD_BASE_URL|readinggarden.duckdns.org/v3/api-docs' deploy/monitoring/scripts/verify-monitoring.sh; then
     echo "monitoring verification must not require prod live docs" >&2
     exit 1

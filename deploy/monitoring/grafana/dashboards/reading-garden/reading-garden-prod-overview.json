@@ -1,13 +1,12 @@
 {
   "uid": "reading-garden-prod-overview",
-  "title": "ReadingGarden Prod Overview",
+  "title": "ReadingGarden Overview",
   "schemaVersion": 41,
   "version": 3,
   "refresh": "15s",
   "tags": [
     "reading-garden",
-    "prod",
-    "phase-1"
+    "prod"
   ],
   "timezone": "browser",
   "time": {
@@ -16,40 +15,71 @@
   },
   "panels": [
     {
+      "id": 100,
+      "type": "row",
+      "title": "Service Health",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
       "id": 1,
       "type": "stat",
-      "title": "Prod Public Health",
+      "title": "Public Health",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
-          "mappings": [],
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "red",
+                "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 1
               }
             ]
+          },
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
         "x": 0,
-        "y": 0
+        "y": 1,
+        "w": 6,
+        "h": 4
       },
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -64,19 +94,101 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
           "expr": "probe_success{job=\"blackbox-public-http\",instance=\"https://readinggarden.duckdns.org/api/health\"}",
-          "legendFormat": "prod external health"
+          "legendFormat": "prod external health",
+          "instant": true,
+          "range": false
         }
       ]
+    },
+    {
+      "id": 29,
+      "type": "stat",
+      "title": "Local Route Health",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_success{job=\"blackbox-local-caddy\",service=\"reading-garden-kotlin\"}",
+          "legendFormat": "Local Route Health",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "description": "Checks this application through the local Caddy route."
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "Prod App Targets",
+      "title": "Active App Instances",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -88,26 +200,30 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "red",
+                "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 1
               }
             ]
+          },
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "x": 12,
+        "y": 1,
         "w": 6,
-        "x": 6,
-        "y": 0
+        "h": 4
       },
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -122,19 +238,19 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
           "expr": "sum(up{job=\"reading-garden-prod-app\"})",
-          "legendFormat": "prod app"
+          "legendFormat": "prod app",
+          "instant": true,
+          "range": false
         }
-      ]
+      ],
+      "description": "Healthy application metrics endpoints. One active blue/green slot is normal; two may appear during deployment."
     },
     {
-      "id": 3,
-      "type": "stat",
-      "title": "Caddy Metrics",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -146,84 +262,31 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 1
               }
             ]
+          },
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 0
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "up{job=\"caddy\"}",
-          "legendFormat": "caddy"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "type": "stat",
-      "title": "Container Metrics",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
         "x": 18,
-        "y": 0
+        "y": 1,
+        "w": 6,
+        "h": 4
       },
+      "id": 25,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -238,19 +301,162 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "expr": "sum(ALERTS{env=\"prod\",service=\"reading-garden-kotlin\",alertstate=\"firing\"}) or vector(0)",
+          "refId": "A",
+          "legendFormat": "active alerts",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Firing Metric Alerts",
+      "type": "stat",
+      "description": "Firing Prometheus rules for this application. Log alerts are summarized separately by Error Logs (30m)."
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Traffic & Errors",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "requests/sec",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Requests / sec",
+      "type": "stat"
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "HTTP 5xx Requests / sec",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
-          "expr": "up{job=\"cadvisor\"}",
-          "legendFormat": "cadvisor"
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\",status=~\"5..\"}[5m])) or vector(0)",
+          "legendFormat": "5xx",
+          "instant": true,
+          "range": false
         }
-      ]
+      ],
+      "description": "HTTP 5xx responses per second, not a percentage. The existing alert fires on sustained nonzero errors."
     },
     {
       "id": 5,
       "type": "stat",
-      "title": "Prod Avg Latency",
+      "title": "Average Response Time",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -262,11 +468,257 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"reading-garden-prod-app\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
+          "legendFormat": "avg latency",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
               {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 6,
+        "w": 6,
+        "h": 4
+      },
+      "id": 23,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"reading-garden-prod-app\"}[5m])))",
+          "refId": "A",
+          "legendFormat": "p95 latency",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "p95 Response Time",
+      "type": "stat",
+      "description": "Requires application request histogram buckets. Unavailable means this metric is not exported or no requests were observed in the last 5 minutes."
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Requests by HTTP Status",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 8
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Response Time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
               }
             ]
           },
@@ -275,41 +727,42 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 4
+        "x": 12,
+        "y": 10,
+        "w": 12,
+        "h": 8
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
           "expr": "sum(rate(http_server_requests_seconds_sum{job=\"reading-garden-prod-app\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
-          "legendFormat": "avg latency"
+          "legendFormat": "average"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"reading-garden-prod-app\"}[5m])))",
+          "legendFormat": "p95"
         }
       ]
     },
     {
       "id": 6,
       "type": "stat",
-      "title": "Prod Max Latency",
+      "title": "Maximum Response Time",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -321,144 +774,28 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 4
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "max(http_server_requests_seconds_max{job=\"reading-garden-prod-app\"})",
-          "legendFormat": "max latency"
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "type": "stat",
-      "title": "Prod 5xx Rate",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 4
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\",status=~\"5..\"}[5m])) or vector(0)",
-          "legendFormat": "5xx"
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "type": "stat",
-      "title": "Hikari Active Connections",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+          "unit": "s",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
           }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 4
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 4
       },
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -473,14 +810,95 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(hikaricp_connections_active{job=\"reading-garden-prod-app\"})",
-          "legendFormat": "active"
+          "expr": "max(http_server_requests_seconds_max{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "max latency",
+          "instant": true,
+          "range": false
         }
-      ]
+      ],
+      "description": "Maximum request duration reported by the application metrics window."
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "No matching logs"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 4
+      },
+      "id": 24,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.14",
+      "targets": [
+        {
+          "expr": "sum(count_over_time({container=~\"reading-garden-prod-.*\"} |~ \"(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\" !~ \"(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)\" [30m]))",
+          "refId": "A",
+          "legendFormat": "error logs",
+          "queryType": "instant"
+        }
+      ],
+      "title": "Error Logs (30m)",
+      "type": "stat",
+      "description": "Matching application error lines in the last 30 minutes. No data may mean no matching logs or unavailable log collection."
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "Runtime & Resources",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 1
+      }
     },
     {
       "id": 9,
@@ -497,27 +915,28 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
-          "unit": "s"
+          "unit": "s",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
         "x": 0,
-        "y": 8
+        "y": 23,
+        "w": 12,
+        "h": 4
       },
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -532,19 +951,21 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
           "expr": "max(process_uptime_seconds{job=\"reading-garden-prod-app\"})",
-          "legendFormat": "uptime"
+          "legendFormat": "uptime",
+          "instant": true,
+          "range": false
         }
       ]
     },
     {
       "id": 10,
       "type": "stat",
-      "title": "Live Threads",
+      "title": "Live JVM Threads",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -556,26 +977,27 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
           }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 8
+        "x": 12,
+        "y": 23,
+        "w": 12,
+        "h": 4
       },
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -590,546 +1012,101 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
           "expr": "sum(jvm_threads_live_threads{job=\"reading-garden-prod-app\"})",
-          "legendFormat": "live threads"
+          "legendFormat": "live threads",
+          "instant": true,
+          "range": false
         }
       ]
     },
     {
-      "id": 11,
-      "type": "stat",
-      "title": "Caddy Last Reload Successful",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 8
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "caddy_config_last_reload_successful{job=\"caddy\"}",
-          "legendFormat": "last reload"
-        }
-      ]
-    },
-    {
-      "id": 12,
-      "type": "stat",
-      "title": "Host CPU Usage Percent",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 8
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "100 * (1 - avg by(instance) (rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[5m])))",
-          "legendFormat": "{{instance}}"
-        }
-      ]
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 12
-      },
-      "id": 23,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"reading-garden-prod-app\"}[5m])))",
-          "refId": "A",
-          "legendFormat": "p95 latency"
-        }
-      ],
-      "title": "Prod p95 Latency",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 12
-      },
-      "id": 24,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "expr": "sum(count_over_time({container=~\"reading-garden-prod-.*\"} |~ \"(?i)([[:space:]]ERROR[[:space:]]|level=error|exception|traceback|NullPointerException|IllegalStateException|DataAccessException|ResponseStatusException)\" !~ \"(?i)(no error|error page|error dispatch)\" !~ \"(?i)FCM (HTTP error|send failed): .*?(fcmErrorCode|errorCode)=(UNREGISTERED|messaging/registration-token-not-registered)\" [30m]))",
-          "refId": "A",
-          "legendFormat": "error logs"
-        }
-      ],
-      "title": "Prod Recent Error Logs",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 12
-      },
-      "id": 25,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "expr": "sum(ALERTS{env=\"prod\",service=\"reading-garden-kotlin\",alertstate=\"firing\"}) or vector(0)",
-          "refId": "A",
-          "legendFormat": "active alerts"
-        }
-      ],
-      "title": "Prod Active Alerts",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 12
-      },
-      "id": 26,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
-          "refId": "A",
-          "legendFormat": "requests/sec"
-        }
-      ],
-      "title": "Prod Request Rate",
-      "type": "stat"
-    },
-    {
-      "id": 13,
+      "id": 27,
+      "title": "Container CPU (% of one core)",
       "type": "timeseries",
-      "title": "HTTP Requests By Status",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
       "fieldConfig": {
         "defaults": {
+          "unit": "percent",
+          "mappings": [],
           "color": {
             "mode": "palette-classic"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.0.0",
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m])) by (status)",
-          "legendFormat": "{{status}}"
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\",name=~\"reading-garden-prod-.*\"}[5m])) * 100",
+          "legendFormat": "{{name}}"
         }
-      ]
+      ],
+      "pluginVersion": "12.4.14",
+      "description": "100% means one CPU core. Multiple cores can exceed 100%."
     },
     {
-      "id": 14,
+      "id": 28,
+      "title": "Container Memory",
       "type": "timeseries",
-      "title": "Prod Avg Latency Trend",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
       "fieldConfig": {
         "defaults": {
+          "unit": "bytes",
+          "mappings": [],
           "color": {
             "mode": "palette-classic"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
-          },
-          "unit": "s"
+          }
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.0.0",
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"reading-garden-prod-app\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"reading-garden-prod-app\"}[5m]))",
-          "legendFormat": "avg latency"
+          "expr": "container_memory_working_set_bytes{job=\"cadvisor\",name=~\"reading-garden-prod-.*\"}",
+          "legendFormat": "{{name}}"
         }
-      ]
+      ],
+      "pluginVersion": "12.4.14"
     },
     {
       "id": 15,
@@ -1182,11 +1159,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
@@ -1195,10 +1169,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 0,
-        "y": 24
+        "y": 35,
+        "w": 12,
+        "h": 8
       },
       "options": {
         "legend": {
@@ -1213,7 +1187,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
@@ -1225,7 +1199,7 @@
     {
       "id": 16,
       "type": "timeseries",
-      "title": "GC Pause Max",
+      "title": "Maximum GC Pause",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1273,11 +1247,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
@@ -1286,10 +1257,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 12,
-        "y": 24
+        "y": 35,
+        "w": 12,
+        "h": 8
       },
       "options": {
         "legend": {
@@ -1304,7 +1275,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
@@ -1314,463 +1285,74 @@
       ]
     },
     {
-      "id": 17,
-      "type": "timeseries",
-      "title": "Caddy Request Rate",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
+      "id": 103,
+      "type": "row",
+      "title": "Database Connection Pool",
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 0,
-        "y": 32
-      },
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(caddy_http_requests_total{job=\"caddy\"}[5m])) by (code)",
-          "legendFormat": "{{code}}"
-        }
-      ]
+        "y": 43,
+        "w": 24,
+        "h": 1
+      }
     },
     {
-      "id": 18,
+      "id": 8,
       "type": "timeseries",
-      "title": "Caddy p95 Duration",
+      "title": "Active DB Connections",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 32
-      },
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(caddy_http_request_duration_seconds_bucket{job=\"caddy\"}[5m])))",
-          "legendFormat": "p95 latency"
-        }
-      ]
-    },
-    {
-      "id": 19,
-      "type": "timeseries",
-      "title": "Host Disk Usage Percent",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
           "color": {
             "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 40
-      },
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "(1 - (node_filesystem_avail_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"})) * 100",
-          "legendFormat": "{{mountpoint}}"
-        }
-      ]
-    },
-    {
-      "id": 20,
-      "type": "timeseries",
-      "title": "Host Memory Usage Percent",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 40
-      },
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "(1 - (node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"})) * 100",
-          "legendFormat": "memory used"
-        }
-      ]
-    },
-    {
-      "id": 21,
-      "type": "timeseries",
-      "title": "Host Load 1m",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
           }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 0,
-        "y": 48
+        "y": 44,
+        "w": 12,
+        "h": 8
       },
       "options": {
         "legend": {
-          "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
-          "expr": "node_load1{job=\"node-exporter\"}",
-          "legendFormat": "load 1m"
+          "expr": "sum(hikaricp_connections_active{job=\"reading-garden-prod-app\"})",
+          "legendFormat": "active"
         }
       ]
     },
     {
       "id": 22,
       "type": "timeseries",
-      "title": "Hikari Pending Connections",
+      "title": "Waiting DB Connections",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1818,11 +1400,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           }
@@ -1830,10 +1409,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 12,
-        "y": 48
+        "y": 44,
+        "w": 12,
+        "h": 8
       },
       "options": {
         "legend": {
@@ -1848,68 +1427,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.4.14",
       "targets": [
         {
           "refId": "A",
           "expr": "sum(hikaricp_connections_pending{job=\"reading-garden-prod-app\"})",
           "legendFormat": "pending"
-        }
-      ]
-    },
-    {
-      "id": 27,
-      "title": "Container CPU Usage",
-      "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 56,
-        "w": 12,
-        "h": 8
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\",name=~\"reading-garden-prod-.*\"}[5m])) * 100",
-          "legendFormat": "{{name}}"
-        }
-      ]
-    },
-    {
-      "id": 28,
-      "title": "Container Memory Usage",
-      "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 56,
-        "w": 12,
-        "h": 8
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "container_memory_working_set_bytes{job=\"cadvisor\",name=~\"reading-garden-prod-.*\"}",
-          "legendFormat": "{{name}}"
         }
       ]
     }
@@ -1919,5 +1442,37 @@
   },
   "annotations": {
     "list": []
-  }
+  },
+  "description": "ReadingGarden production health, requests, runtime resources, and application database pool. Host and shared PostgreSQL details are linked separately.",
+  "links": [
+    {
+      "title": "A1 Shared",
+      "type": "link",
+      "url": "/d/a1-shared-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "PostgreSQL",
+      "type": "link",
+      "url": "/d/reading-garden-postgres-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "PawTogether",
+      "type": "link",
+      "url": "/d/pawtogether-prod-overview",
+      "targetBlank": false,
+      "keepTime": true
+    },
+    {
+      "title": "Application Logs",
+      "type": "link",
+      "url": "/d/reading-garden-logs",
+      "targetBlank": false,
+      "keepTime": true
+    }
+  ],
+  "graphTooltip": 1
 }
